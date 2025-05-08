@@ -10,6 +10,7 @@ import CheckIn from "./pages/CheckIn";
 import Friends from "./pages/Friends";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/check-in" element={<CheckIn />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

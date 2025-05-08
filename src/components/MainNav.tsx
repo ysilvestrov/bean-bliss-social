@@ -58,9 +58,11 @@ const MainNav = () => {
           ))}
         </div>
 
-        <Button variant="outline" className="border-coffee-dark text-coffee-dark hover:bg-coffee-light/20">
-          Log in
-        </Button>
+        <Link to="/login">
+          <Button variant="outline" className="border-coffee-dark text-coffee-dark hover:bg-coffee-light/20">
+            Log in
+          </Button>
+        </Link>
       </nav>
 
       {/* Mobile Navigation */}

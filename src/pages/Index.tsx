@@ -101,9 +101,11 @@ const Index = () => {
               Sign up today and start sharing your coffee journey with friends and enthusiasts around the world.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
-              <Button className="bg-coffee-accent hover:bg-coffee-accent/90">
-                Sign Up Now
-              </Button>
+              <Link to="/login">
+                <Button className="bg-coffee-accent hover:bg-coffee-accent/90">
+                  Sign Up Now
+                </Button>
+              </Link>
               <Button variant="outline" className="border-white text-white hover:bg-white/10">
                 Learn More
               </Button>
