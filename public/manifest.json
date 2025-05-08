@@ -1,0 +1,22 @@
+
+{
+  "name": "Bean Bliss",
+  "short_name": "BeanBliss",
+  "description": "Track and share your coffee experiences",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8DC",
+  "theme_color": "#6F4E37",
+  "icons": [
+    {
+      "src": "/coffee-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/coffee-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
