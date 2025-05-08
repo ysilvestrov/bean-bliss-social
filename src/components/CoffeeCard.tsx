@@ -6,19 +6,35 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import StarRating from "./StarRating";
 
-interface CoffeeCardProps {
+interface CheckInData {
   id: string;
-  userName: string;
+  coffeeType: string;
+  roaster: string;
+  location: string;
+  method: string;
+  rating: number;
+  date: string;
+  image?: string;
+  notes?: string;
+}
+
+interface CoffeeCardProps {
+  id?: string;
+  userName?: string;
   userImage?: string;
   coffeeImage?: string;
-  coffeeName: string;
-  roastery: string;
-  brewMethod: string;
-  location: string;
-  rating: number;
+  coffeeName?: string;
+  roastery?: string;
+  brewMethod?: string;
+  location?: string;
+  rating?: number;
   comment?: string;
-  timestamp: string;
-  userInitials: string;
+  timestamp?: string;
+  userInitials?: string;
+  // New prop to accept check-in data directly
+  checkIn?: CheckInData;
+  // Add onDelete for Profile page functionality
+  onDelete?: (checkInId: string) => void;
 }
 
 const CoffeeCard = ({
@@ -34,32 +50,51 @@ const CoffeeCard = ({
   comment,
   timestamp,
   userInitials,
+  checkIn,
+  onDelete,
 }: CoffeeCardProps) => {
+  // If checkIn prop is provided, use its values
+  const checkInId = checkIn?.id || id;
+  const displayCoffeeName = checkIn?.coffeeType || coffeeName;
+  const displayRoastery = checkIn?.roaster || roastery;
+  const displayBrewMethod = checkIn?.method || brewMethod;
+  const displayLocation = checkIn?.location || location;
+  const displayRating = checkIn?.rating || rating;
+  const displayComment = checkIn?.notes || comment;
+  const displayImage = checkIn?.image || coffeeImage;
+  const displayTimestamp = checkIn?.date ? new Date(checkIn.date).toLocaleDateString() : timestamp;
+
   return (
     <div className="coffee-card mb-6">
-      <div className="p-4 flex items-center space-x-3 border-b">
-        <Avatar className="h-10 w-10">
-          {userImage ? (
-            <AvatarImage src={userImage} alt={userName} />
-          ) : (
-            <AvatarFallback className="bg-coffee-medium text-white">{userInitials}</AvatarFallback>
-          )}
-        </Avatar>
-        <div>
-          <Link to={`/user/${userName}`} className="font-medium hover:underline">
-            {userName}
-          </Link>
-          <div className="text-sm text-gray-500 flex items-center">
-            <Calendar className="h-3 w-3 mr-1" />
-            {timestamp}
+      {(userName || timestamp) && (
+        <div className="p-4 flex items-center space-x-3 border-b">
+          <Avatar className="h-10 w-10">
+            {userImage ? (
+              <AvatarImage src={userImage} alt={userName || ""} />
+            ) : (
+              <AvatarFallback className="bg-coffee-medium text-white">{userInitials}</AvatarFallback>
+            )}
+          </Avatar>
+          <div>
+            {userName && (
+              <Link to={`/user/${userName}`} className="font-medium hover:underline">
+                {userName}
+              </Link>
+            )}
+            {displayTimestamp && (
+              <div className="text-sm text-gray-500 flex items-center">
+                <Calendar className="h-3 w-3 mr-1" />
+                {displayTimestamp}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
-      {coffeeImage && (
+      {displayImage && (
         <div className="aspect-square relative overflow-hidden">
           <img 
-            src={coffeeImage} 
+            src={displayImage} 
             alt="Coffee" 
             className="w-full h-full object-cover"
           />
@@ -68,25 +103,25 @@ const CoffeeCard = ({
 
       <div className="p-4">
         <div className="mb-2">
-          <StarRating rating={rating} interactive={false} />
+          <StarRating rating={displayRating || 0} interactive={false} />
         </div>
         
-        <h3 className="text-lg font-medium">{coffeeName}</h3>
-        <p className="text-sm text-gray-600">by {roastery}</p>
+        <h3 className="text-lg font-medium">{displayCoffeeName}</h3>
+        <p className="text-sm text-gray-600">by {displayRoastery}</p>
         
         <div className="my-3 flex items-center text-sm text-gray-500">
           <Coffee className="h-4 w-4 mr-1" />
-          <span>{brewMethod}</span>
-          {location && (
+          <span>{displayBrewMethod}</span>
+          {displayLocation && (
             <>
               <span className="mx-1">•</span>
               <MapPin className="h-4 w-4 mr-1" />
-              <span>{location}</span>
+              <span>{displayLocation}</span>
             </>
           )}
         </div>
 
-        {comment && <p className="text-sm mt-2">{comment}</p>}
+        {displayComment && <p className="text-sm mt-2">{displayComment}</p>}
 
         <div className="mt-4 flex justify-between">
           <Button variant="ghost" size="sm" className="text-gray-600">
@@ -95,9 +130,15 @@ const CoffeeCard = ({
           <Button variant="ghost" size="sm" className="text-gray-600">
             Comment
           </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            Share
-          </Button>
+          {onDelete ? (
+            <Button variant="ghost" size="sm" onClick={() => onDelete(checkInId || "")} className="text-gray-600">
+              Delete
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" className="text-gray-600">
+              Share
+            </Button>
+          )}
         </div>
       </div>
     </div>
