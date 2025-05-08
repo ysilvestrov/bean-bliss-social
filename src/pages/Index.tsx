@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Coffee, Star } from "lucide-react";
+import { Coffee, Star, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 

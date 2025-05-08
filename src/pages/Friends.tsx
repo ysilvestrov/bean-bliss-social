@@ -1,200 +1,224 @@
-
 import React, { useState } from "react";
-import MainNav from "@/components/MainNav";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import MainNav from "@/components/MainNav";
 import FriendCard from "@/components/FriendCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
 
-// Mock data
-const friendsList = [
-  { 
-    id: "1", 
-    name: "Sarah Johnson", 
-    username: "coffeeNerd42", 
-    initials: "SJ", 
-    status: "friend", 
-    checkIns: 42 
+// Let's define the correct type for status
+type FriendStatus = "friend" | "pending" | "none";
+
+// Define the mock data with correct status types
+const mockFriends = [
+  {
+    id: "1",
+    name: "Alex Johnson",
+    username: "alexj",
+    initials: "AJ",
+    status: "friend" as FriendStatus,
+    checkIns: 124,
+    avatar: "https://i.pravatar.cc/150?u=alexj"
   },
-  { 
-    id: "2", 
-    name: "Michael Chen", 
-    username: "espressoLover", 
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde", 
-    initials: "MC", 
-    status: "friend", 
-    checkIns: 18 
+  {
+    id: "2",
+    name: "Sam Taylor",
+    username: "samt",
+    initials: "ST",
+    status: "friend" as FriendStatus,
+    checkIns: 78
   },
-  { 
-    id: "3", 
-    name: "Jessica Wong", 
-    username: "brewMaster", 
-    initials: "JW", 
-    status: "friend", 
-    checkIns: 86 
+  {
+    id: "3",
+    name: "Jordan Lee",
+    username: "jlee",
+    initials: "JL",
+    status: "friend" as FriendStatus,
+    checkIns: 203,
+    avatar: "https://i.pravatar.cc/150?u=jlee"
+  },
+  {
+    id: "4",
+    name: "Casey Morgan",
+    username: "cmorg",
+    initials: "CM",
+    status: "friend" as FriendStatus,
+    checkIns: 56
+  },
+  {
+    id: "5",
+    name: "Riley Quinn",
+    username: "rileyq",
+    initials: "RQ",
+    status: "friend" as FriendStatus,
+    checkIns: 189,
+    avatar: "https://i.pravatar.cc/150?u=rileyq"
   }
 ];
 
-const pendingRequests = [
-  { 
-    id: "4", 
-    name: "David Miller", 
-    username: "millerTime", 
-    initials: "DM", 
-    status: "pending", 
-    checkIns: 0 
+const mockPending = [
+  {
+    id: "6",
+    name: "Jamie Smith",
+    username: "jamies",
+    initials: "JS",
+    status: "pending" as FriendStatus,
+    checkIns: 45
   },
-  { 
-    id: "5", 
-    name: "Sophia Garcia", 
-    username: "sophiaG", 
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330", 
-    initials: "SG", 
-    status: "pending", 
-    checkIns: 23 
+  {
+    id: "7",
+    name: "Blake Wilson",
+    username: "bwilson",
+    initials: "BW",
+    status: "pending" as FriendStatus,
+    checkIns: 112,
+    avatar: "https://i.pravatar.cc/150?u=bwilson"
   }
 ];
 
-const suggestedFriends = [
-  { 
-    id: "6", 
-    name: "Alex Turner", 
-    username: "alexT", 
-    initials: "AT", 
-    status: "none", 
-    checkIns: 14 
+const mockSuggestions = [
+  {
+    id: "8",
+    name: "Taylor Reed",
+    username: "treed",
+    initials: "TR",
+    status: "none" as FriendStatus,
+    checkIns: 64
   },
-  { 
-    id: "7", 
-    name: "Emma Wilson", 
-    username: "emmaW", 
-    avatar: "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56", 
-    initials: "EW", 
-    status: "none", 
-    checkIns: 31 
+  {
+    id: "9",
+    name: "Cameron White",
+    username: "cwhite",
+    initials: "CW",
+    status: "none" as FriendStatus,
+    checkIns: 93,
+    avatar: "https://i.pravatar.cc/150?u=cwhite"
   },
-  { 
-    id: "8", 
-    name: "Ryan Johnson", 
-    username: "ryanJ", 
-    initials: "RJ", 
-    status: "none", 
-    checkIns: 5 
+  {
+    id: "10",
+    name: "Jordan Ellis",
+    username: "jellis",
+    initials: "JE",
+    status: "none" as FriendStatus,
+    checkIns: 127
   }
 ];
 
 const Friends = () => {
-  const [friends, setFriends] = useState(friendsList);
-  const [pending, setPending] = useState(pendingRequests);
-  const [suggested, setSuggested] = useState(suggestedFriends);
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  const handleFriendAction = (id: string, action: 'add' | 'accept' | 'remove') => {
-    if (action === 'add') {
-      const friendToAdd = suggested.find(f => f.id === id);
-      if (friendToAdd) {
-        setSuggested(suggested.filter(f => f.id !== id));
-        setPending([...pending, {...friendToAdd, status: 'pending' as const}]);
-      }
-    } 
-    else if (action === 'accept') {
-      const friendToAccept = pending.find(f => f.id === id);
+  const [friends, setFriends] = useState(mockFriends);
+  const [pendingFriends, setPendingFriends] = useState(mockPending);
+  const [suggestions, setSuggestions] = useState(mockSuggestions);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+
+  const handleFriendAction = (id: string, action: string) => {
+    if (action === "accept") {
+      // Move from pending to friends
+      const friendToAccept = pendingFriends.find((friend) => friend.id === id);
       if (friendToAccept) {
-        setPending(pending.filter(f => f.id !== id));
-        setFriends([...friends, {...friendToAccept, status: 'friend' as const}]);
+        setFriends([...friends, { ...friendToAccept, status: "friend" }]);
+        setPendingFriends(pendingFriends.filter((friend) => friend.id !== id));
+        toast({
+          title: "Friend Request Accepted!",
+          description: `You are now friends with ${friendToAccept.name}.`,
+        });
       }
-    }
-    else if (action === 'remove') {
-      setPending(pending.filter(f => f.id !== id));
-      setFriends(friends.filter(f => f.id !== id));
-      // If we want to put them back in suggested:
-      // const removedFromPending = pending.find(f => f.id === id);
-      // if (removedFromPending) {
-      //   setSuggested([...suggested, {...removedFromPending, status: 'none' as const}]);
-      // }
+    } else if (action === "reject") {
+      // Remove from pending
+      const friendToRemove = pendingFriends.find((friend) => friend.id === id);
+      if (friendToRemove) {
+        setPendingFriends(pendingFriends.filter((friend) => friend.id !== id));
+        toast({
+          title: "Friend Request Rejected",
+          description: `You have rejected the friend request from ${friendToRemove.name}.`,
+        });
+      }
+    } else if (action === "add") {
+      // Move from suggestions to pending
+      const friendToAdd = suggestions.find((friend) => friend.id === id);
+      if (friendToAdd) {
+        setPendingFriends([...pendingFriends, { ...friendToAdd, status: "pending" }]);
+        setSuggestions(suggestions.filter((friend) => friend.id !== id));
+        toast({
+          title: "Friend Request Sent!",
+          description: `You have sent a friend request to ${friendToAdd.name}.`,
+        });
+      }
+    } else if (action === "remove") {
+      // Remove from friends
+      const friendToRemove = friends.find((friend) => friend.id === id);
+      if (friendToRemove) {
+        setFriends(friends.filter((friend) => friend.id !== id));
+        toast({
+          title: "Friend Removed",
+          description: `You have removed ${friendToRemove.name} from your friends.`,
+        });
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+    <div className="min-h-screen bg-gray-50">
       <MainNav />
-      
-      <div className="container max-w-xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold text-coffee-dark mb-6">Friends</h1>
+      <div className="container mx-auto px-4 py-6">
+        <h1 className="text-2xl font-bold mb-6">Friends</h1>
         
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <div className="mb-6">
           <Input
-            type="text"
-            placeholder="Search friends..."
-            className="pl-10 bg-white"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            type="search"
+            placeholder="Search for friends..."
+            className="max-w-md"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
-        <Tabs defaultValue="myFriends">
-          <TabsList className="w-full mb-6">
-            <TabsTrigger value="myFriends" className="flex-1">
-              My Friends
-              <span className="ml-1 text-xs bg-coffee-light/20 text-coffee-dark px-2 py-0.5 rounded-full">
-                {friends.length}
-              </span>
+        <Tabs defaultValue="friends" className="mb-6">
+          <TabsList>
+            <TabsTrigger value="friends">
+              My Friends ({friends.length})
             </TabsTrigger>
-            <TabsTrigger value="pending" className="flex-1">
-              Requests
-              {pending.length > 0 && (
-                <span className="ml-1 text-xs bg-coffee-accent/20 text-coffee-accent px-2 py-0.5 rounded-full">
-                  {pending.length}
-                </span>
-              )}
+            <TabsTrigger value="pending">
+              Pending ({pendingFriends.length})
             </TabsTrigger>
-            <TabsTrigger value="suggested" className="flex-1">
-              Suggested
+            <TabsTrigger value="suggestions">
+              Suggestions ({suggestions.length})
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="myFriends" className="space-y-4">
-            {friends.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">You haven't added any friends yet.</p>
-              </div>
-            ) : (
-              friends.map((friend) => (
+          <TabsContent value="friends" className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {friends.map((friend) => (
                 <FriendCard
                   key={friend.id}
-                  {...friend}
                   onAction={handleFriendAction}
+                  {...friend}
                 />
-              ))
-            )}
+              ))}
+            </div>
           </TabsContent>
           
-          <TabsContent value="pending" className="space-y-4">
-            {pending.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No pending friend requests.</p>
-              </div>
-            ) : (
-              pending.map((friend) => (
+          <TabsContent value="pending" className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pendingFriends.map((friend) => (
                 <FriendCard
                   key={friend.id}
-                  {...friend}
                   onAction={handleFriendAction}
+                  {...friend}
                 />
-              ))
-            )}
+              ))}
+            </div>
           </TabsContent>
           
-          <TabsContent value="suggested" className="space-y-4">
-            <p className="text-sm text-gray-500 mb-2">People you might know:</p>
-            {suggested.map((friend) => (
-              <FriendCard
-                key={friend.id}
-                {...friend}
-                onAction={handleFriendAction}
-              />
-            ))}
+          <TabsContent value="suggestions" className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {suggestions.map((friend) => (
+                <FriendCard
+                  key={friend.id}
+                  onAction={handleFriendAction}
+                  {...friend}
+                />
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </div>

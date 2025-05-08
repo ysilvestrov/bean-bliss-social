@@ -1,183 +1,197 @@
-
 import React, { useState } from "react";
-import MainNav from "@/components/MainNav";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Coffee, Settings, LogOut } from "lucide-react";
+import MainNav from "@/components/MainNav";
 import CoffeeCard from "@/components/CoffeeCard";
-import { Coffee, Settings, User, UserPlus } from "lucide-react";
 import FriendCard from "@/components/FriendCard";
+import { useToast } from "@/components/ui/use-toast";
 
-// Mock user data
-const user = {
-  id: "current-user",
-  name: "Alex Morgan",
-  username: "alexMorgan",
-  avatar: null,
-  initials: "AM",
-  bio: "Coffee enthusiast. Pour-over specialist. Always searching for the perfect cup.",
-  checkIns: 24,
-  friends: 8,
+// Define the correct type for status
+type FriendStatus = "friend" | "pending" | "none";
+
+// Mock data for the profile
+const profileData = {
+  id: "user1",
+  name: "Jamie Coffee",
+  username: "coffeelover",
+  avatar: "https://i.pravatar.cc/150?u=jamie",
+  bio: "Coffee enthusiast and home barista. Always searching for the perfect cup!",
+  location: "Seattle, WA",
+  joinDate: "January 2023",
+  checkInCount: 127,
+  friendsCount: 43
 };
 
-// Mock check-ins
-const userCheckIns = [
+// Mock coffee check-ins with correct status types
+const mockCheckIns = [
   {
-    id: "u1",
-    userName: user.username,
-    userInitials: user.initials,
-    coffeeImage: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735",
-    coffeeName: "Kenya AA",
-    roastery: "Intelligentsia",
-    brewMethod: "Chemex",
-    location: "Home Brewing",
-    rating: 5,
-    comment: "Bright acidity, berry notes. Perfect morning cup!",
-    timestamp: "3 days ago"
+    id: "c1",
+    coffeeType: "Ethiopian Yirgacheffe",
+    roaster: "Heart Coffee Roasters",
+    location: "Home Brew",
+    method: "Pour Over",
+    rating: 4.5,
+    date: "2025-05-06T08:30:00",
+    image: "https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c",
+    notes: "Floral notes with a hint of blueberry. Perfect morning cup."
   },
   {
-    id: "u2",
-    userName: user.username,
-    userInitials: user.initials,
-    coffeeImage: "https://images.unsplash.com/photo-1521302080334-4bebac2763a6",
-    coffeeName: "Sumatra Mandheling",
-    roastery: "Stumptown",
-    brewMethod: "French Press",
-    location: "Weekend Retreat",
-    rating: 4,
-    comment: "Earthy, full-bodied. Great with breakfast.",
-    timestamp: "1 week ago"
+    id: "c2",
+    coffeeType: "Colombian Supremo",
+    roaster: "Stumptown Coffee",
+    location: "Coffee Bar Downtown",
+    method: "Espresso",
+    rating: 5,
+    date: "2025-05-04T14:15:00",
+    image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd",
+    notes: "Best espresso I've had in months! Caramel sweetness with a smooth finish."
+  },
+  {
+    id: "c3",
+    coffeeType: "Sumatra Mandheling",
+    roaster: "Blue Bottle",
+    location: "Work",
+    method: "French Press",
+    rating: 3.5,
+    date: "2025-05-01T10:45:00",
+    notes: "Earthy and full-bodied. A bit too intense for my taste but good quality."
   }
 ];
 
-// Mock friends for user profile
-const userFriends = [
-  { 
-    id: "f1", 
-    name: "Sarah Johnson", 
-    username: "coffeeNerd42", 
-    initials: "SJ", 
-    status: "friend", 
-    checkIns: 42,
+// Mock friends with correct status types
+const mockFriends = [
+  {
+    id: "f1",
+    name: "Alex Johnson",
+    username: "alexj",
+    initials: "AJ",
+    status: "friend" as FriendStatus,
+    checkIns: 89,
+    avatar: "https://i.pravatar.cc/150?u=alexj"
   },
-  { 
-    id: "f2", 
-    name: "Michael Chen", 
-    username: "espressoLover", 
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde", 
-    initials: "MC", 
-    status: "friend", 
-    checkIns: 18,
+  {
+    id: "f2",
+    name: "Sam Taylor",
+    username: "samt",
+    initials: "ST",
+    status: "friend" as FriendStatus,
+    checkIns: 56
   },
-  { 
-    id: "f3", 
-    name: "Jessica Wong", 
-    username: "brewMaster", 
-    initials: "JW", 
-    status: "friend", 
-    checkIns: 86,
+  {
+    id: "f3",
+    name: "Jordan Lee",
+    username: "jlee",
+    initials: "JL",
+    status: "friend" as FriendStatus,
+    checkIns: 124,
+    avatar: "https://i.pravatar.cc/150?u=jlee"
   }
 ];
 
 const Profile = () => {
-  const [checkIns, setCheckIns] = useState(userCheckIns);
-  const [friends, setFriends] = useState(userFriends);
+  const [activeTab, setActiveTab] = useState("check-ins");
+  const [checkIns, setCheckIns] = useState(mockCheckIns);
+  const [friends, setFriends] = useState(mockFriends);
+  const { toast } = useToast();
+
+  const handleDeleteCheckIn = (checkInId: string) => {
+    setCheckIns(checkIns.filter((checkIn) => checkIn.id !== checkInId));
+    toast({
+      title: "Check-in deleted.",
+      description: "Your coffee check-in has been successfully removed.",
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+    <div className="min-h-screen bg-gray-50">
       <MainNav />
       
-      <div className="container max-w-xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-          {/* Profile header/banner */}
-          <div className="h-24 bg-gradient-to-r from-coffee-dark to-coffee-medium" />
-          
-          {/* Profile info */}
-          <div className="px-6 pb-6">
-            <div className="flex flex-col items-center -mt-12">
-              <Avatar className="h-24 w-24 border-4 border-white">
-                {user.avatar ? (
-                  <AvatarImage src={user.avatar} />
-                ) : (
-                  <AvatarFallback className="bg-coffee-accent text-white text-xl">
-                    {user.initials}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <h1 className="mt-4 text-2xl font-bold">{user.name}</h1>
-              <p className="text-gray-500">@{user.username}</p>
-              
-              <div className="flex space-x-4 mt-4">
-                <div className="text-center">
-                  <p className="font-semibold">{user.checkIns}</p>
-                  <p className="text-sm text-gray-500">Check-ins</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold">{user.friends}</p>
-                  <p className="text-sm text-gray-500">Friends</p>
-                </div>
-              </div>
-              
-              {user.bio && (
-                <p className="text-center mt-4 text-gray-600 max-w-md">
-                  {user.bio}
-                </p>
+      <div className="container mx-auto px-4 py-6">
+        {/* Profile Header */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <div className="w-24 h-24 rounded-full bg-coffee-light flex items-center justify-center text-coffee-dark text-3xl font-bold overflow-hidden">
+              {profileData.avatar ? (
+                <img 
+                  src={profileData.avatar} 
+                  alt={profileData.name} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                profileData.name.substring(0, 2).toUpperCase()
               )}
-              
-              <div className="mt-6 flex space-x-3">
-                <Button variant="outline" className="flex items-center" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
+            </div>
+            
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{profileData.name}</h1>
+              <p className="text-gray-600">@{profileData.username}</p>
+              <p className="mt-2">{profileData.bio}</p>
+              <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                {profileData.location && (
+                  <span>{profileData.location}</span>
+                )}
+                <span>Joined {profileData.joinDate}</span>
               </div>
+              <div className="flex flex-wrap gap-6 mt-4">
+                <div>
+                  <div className="font-bold text-xl">{profileData.checkInCount}</div>
+                  <div className="text-sm text-gray-600">Check-ins</div>
+                </div>
+                <div>
+                  <div className="font-bold text-xl">{profileData.friendsCount}</div>
+                  <div className="text-sm text-gray-600">Friends</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
+              <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
         
-        <Tabs defaultValue="checkIns">
-          <TabsList className="w-full mb-6">
-            <TabsTrigger value="checkIns" className="flex-1">
-              <Coffee className="h-4 w-4 mr-2" />
+        {/* Tabs for Check-ins and Friends */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="check-ins">
+              <Coffee className="w-4 h-4 mr-2" />
               Check-ins
             </TabsTrigger>
-            <TabsTrigger value="friends" className="flex-1">
-              <User className="h-4 w-4 mr-2" />
+            <TabsTrigger value="friends">
               Friends
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="checkIns" className="space-y-6">
-            {checkIns.length === 0 ? (
-              <div className="text-center py-8">
-                <Coffee className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">No check-ins yet.</p>
-                <Button className="mt-4 bg-coffee-dark hover:bg-coffee-dark/90">
-                  Add Your First Check-in
-                </Button>
-              </div>
-            ) : (
-              checkIns.map((checkIn) => (
-                <CoffeeCard key={checkIn.id} {...checkIn} />
-              ))
-            )}
+          <TabsContent value="check-ins">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {checkIns.map((checkIn) => (
+                <CoffeeCard
+                  key={checkIn.id}
+                  checkIn={checkIn}
+                  onDelete={handleDeleteCheckIn}
+                />
+              ))}
+            </div>
           </TabsContent>
           
-          <TabsContent value="friends" className="space-y-4">
-            {friends.length === 0 ? (
-              <div className="text-center py-8">
-                <UserPlus className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">No friends yet.</p>
-                <Button className="mt-4">Find Friends</Button>
-              </div>
-            ) : (
-              friends.map((friend) => (
+          <TabsContent value="friends">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {friends.map((friend) => (
                 <FriendCard
                   key={friend.id}
-                  {...friend}
                   variant="compact"
+                  {...friend}
                 />
-              ))
-            )}
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
