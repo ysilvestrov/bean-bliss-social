@@ -10,6 +10,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, LogIn } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -31,21 +37,25 @@ const LoginForm = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setError(null);
-      // In a real application, you would connect to Supabase here
-      // For now, we'll simulate a successful login
-      console.log("Login credentials:", values);
       
-      // Mock successful login
-      if (values.email === "demo@example.com" && values.password === "password123") {
-        // Success - simulate login
+      // Use Supabase email/password auth
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (signInError) {
+        setError(signInError.message || "Invalid email or password. Try demo@example.com and password123");
+        console.error("Login error:", signInError);
+        return;
+      }
+
+      if (data.session) {
         toast({
           title: "Login successful",
           description: "Welcome back to Bean Bliss!",
         });
         navigate("/home");
-      } else {
-        // Show error for demo purposes
-        setError("Invalid email or password. Try demo@example.com and password123");
       }
     } catch (error) {
       setError("An error occurred during login. Please try again.");
@@ -53,13 +63,31 @@ const LoginForm = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // In a real app with Supabase integration, we would use their auth providers
-    console.log("Google sign-in clicked");
-    toast({
-      title: "Google Sign In",
-      description: "This would connect to Google authentication in a real app"
-    });
+  const handleGoogleSignIn = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/home`
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: "Sign In Error",
+          description: error.message,
+          variant: "destructive"
+        });
+        console.error("Google sign-in error:", error);
+      }
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      toast({
+        title: "Sign In Error",
+        description: "Failed to connect to Google authentication",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
