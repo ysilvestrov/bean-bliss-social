@@ -35,7 +35,9 @@ const Home = () => {
         .from('coffee_check_ins')
         .select(`
           *,
-          profiles(username, avatar_url)
+          user:user_id(
+            profiles(username, avatar_url)
+          )
         `)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -49,9 +51,9 @@ const Home = () => {
         // Transform data to match the format expected by CoffeeCard
         const formattedFeed = data.map(item => ({
           id: item.id,
-          userName: item.profiles?.username || "Coffee Lover",
-          userInitials: getUserInitials(item.profiles?.username || "Coffee Lover"),
-          userImage: item.profiles?.avatar_url || null,
+          userName: item.user?.profiles?.username || "Coffee Lover",
+          userInitials: getUserInitials(item.user?.profiles?.username || "Coffee Lover"),
+          userImage: item.user?.profiles?.avatar_url || null,
           coffeeImage: item.image_url || null,
           coffeeName: item.coffee_name,
           roastery: item.roaster,
