@@ -1,54 +1,103 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import MainNav from "@/components/MainNav";
 import CoffeeCard from "@/components/CoffeeCard";
-
-// Mock data for feed
-const mockFeed = [
-  {
-    id: "1",
-    userName: "coffeeNerd42",
-    userInitials: "CN",
-    coffeeImage: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
-    coffeeName: "Ethiopian Yirgacheffe",
-    roastery: "Blue Bottle",
-    brewMethod: "Pour Over",
-    location: "Home",
-    rating: 5,
-    comment: "Bright, floral notes with a hint of citrus. One of my favorites!",
-    timestamp: "2 hours ago"
-  },
-  {
-    id: "2",
-    userName: "espressoLover",
-    userInitials: "EL",
-    userImage: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde",
-    coffeeImage: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd",
-    coffeeName: "Colombia El Paraiso",
-    roastery: "Stumptown",
-    brewMethod: "Espresso",
-    location: "Local Coffee Shop",
-    rating: 4,
-    comment: "Rich crema, chocolate notes. Slightly acidic finish.",
-    timestamp: "Yesterday"
-  },
-  {
-    id: "3",
-    userName: "brewMaster",
-    userInitials: "BM",
-    coffeeImage: "https://images.unsplash.com/photo-1511537190424-bbbab87ac5eb",
-    coffeeName: "Guatemala Antigua",
-    roastery: "Counter Culture",
-    brewMethod: "French Press",
-    location: "",
-    rating: 3,
-    comment: "Good body but slightly over-extracted this time.",
-    timestamp: "2 days ago"
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const Home = () => {
-  const [feed, setFeed] = useState(mockFeed);
+  const [feed, setFeed] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [feedType, setFeedType] = useState("friends"); // "friends" or "discover"
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/login');
+        return;
+      }
+      
+      // Continue to load feed if authenticated
+      loadFeed();
+    };
+    
+    checkAuth();
+  }, [navigate, feedType]);
+
+  const loadFeed = async () => {
+    setLoading(true);
+    try {
+      // For now, we don't differentiate between friends and discover feeds
+      // In the future, we could implement a friends system
+      const { data, error } = await supabase
+        .from('coffee_check_ins')
+        .select('*, profiles(username, avatar_url)')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error("Error fetching feed:", error);
+        return;
+      }
+
+      if (data) {
+        // Transform data to match the format expected by CoffeeCard
+        const formattedFeed = data.map(item => ({
+          id: item.id,
+          userName: item.profiles?.username || "Coffee Lover",
+          userInitials: getUserInitials(item.profiles?.username || "Coffee Lover"),
+          userImage: item.profiles?.avatar_url || null,
+          coffeeImage: item.image_url || null,
+          coffeeName: item.coffee_name,
+          roastery: item.roaster,
+          brewMethod: item.brew_method,
+          location: item.location || null,
+          rating: item.rating,
+          comment: item.notes || null,
+          timestamp: formatDate(item.created_at)
+        }));
+
+        setFeed(formattedFeed);
+      }
+    } catch (error) {
+      console.error("Error loading feed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to get user initials from username
+  const getUserInitials = (username: string) => {
+    return username
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substr(0, 2);
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMillis = now.getTime() - date.getTime();
+    const diffInHours = diffInMillis / (1000 * 60 * 60);
+    
+    if (diffInHours < 1) {
+      return "Just now";
+    } else if (diffInHours < 24) {
+      const hours = Math.floor(diffInHours);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    } else if (diffInHours < 48) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
@@ -58,18 +107,48 @@ const Home = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-coffee-dark">Feed</h1>
           <div className="text-sm font-medium">
-            <button className="text-coffee-dark border-b-2 border-coffee-dark mr-4">
+            <button 
+              className={`mr-4 ${
+                feedType === "friends" 
+                  ? "text-coffee-dark border-b-2 border-coffee-dark" 
+                  : "text-gray-500 hover:text-coffee-dark"
+              }`}
+              onClick={() => setFeedType("friends")}
+            >
               Friends
             </button>
-            <button className="text-gray-500 hover:text-coffee-dark">
+            <button 
+              className={
+                feedType === "discover" 
+                  ? "text-coffee-dark border-b-2 border-coffee-dark" 
+                  : "text-gray-500 hover:text-coffee-dark"
+              }
+              onClick={() => setFeedType("discover")}
+            >
               Discover
             </button>
           </div>
         </div>
         
-        {feed.map((item) => (
-          <CoffeeCard key={item.id} {...item} />
-        ))}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-coffee-dark" />
+          </div>
+        ) : feed.length > 0 ? (
+          feed.map((item) => (
+            <CoffeeCard key={item.id} {...item} />
+          ))
+        ) : (
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <p className="text-gray-500">No coffee check-ins found.</p>
+            <button 
+              onClick={() => navigate('/check-in')} 
+              className="mt-4 text-coffee-dark hover:underline"
+            >
+              Create your first check-in!
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
