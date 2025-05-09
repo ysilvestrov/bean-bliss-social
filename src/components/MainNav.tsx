@@ -1,16 +1,57 @@
 
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Coffee, Home, Users, Bell, User } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Coffee, Home, Users, Bell, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const MainNav = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
+  useEffect(() => {
+    // Check if user is logged in
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    
+    getSession();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setIsAuthenticated(!!session);
+      }
+    );
+    
+    return () => subscription.unsubscribe();
+  }, []);
+  
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account",
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Sign out failed",
+        description: "An error occurred while signing out",
+        variant: "destructive",
+      });
+    }
+  };
+
   const navItems = [
     {
-      path: "/",
+      path: "/home",
       label: "Home",
       icon: Home,
     },
@@ -58,11 +99,22 @@ const MainNav = () => {
           ))}
         </div>
 
-        <Link to="/login">
-          <Button variant="outline" className="border-coffee-dark text-coffee-dark hover:bg-coffee-light/20">
-            Log in
+        {isAuthenticated ? (
+          <Button 
+            variant="outline" 
+            className="border-coffee-dark text-coffee-dark hover:bg-coffee-light/20"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign out
           </Button>
-        </Link>
+        ) : (
+          <Link to="/login">
+            <Button variant="outline" className="border-coffee-dark text-coffee-dark hover:bg-coffee-light/20">
+              Log in
+            </Button>
+          </Link>
+        )}
       </nav>
 
       {/* Mobile Navigation */}

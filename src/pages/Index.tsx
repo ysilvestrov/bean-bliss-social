@@ -1,10 +1,26 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Coffee, Star, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // User is logged in, redirect to home page
+        navigate("/home");
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
