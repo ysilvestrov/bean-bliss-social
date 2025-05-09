@@ -31,11 +31,15 @@ const Home = () => {
   const loadFeed = async () => {
     setLoading(true);
     try {
-      // For now, we don't differentiate between friends and discover feeds
-      // In the future, we could implement a friends system
       const { data, error } = await supabase
         .from('coffee_check_ins')
-        .select('*, profiles(username, avatar_url)')
+        .select(`
+          *,
+          profile:user_id(
+            username,
+            avatar_url
+          )
+        `)
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -48,9 +52,9 @@ const Home = () => {
         // Transform data to match the format expected by CoffeeCard
         const formattedFeed = data.map(item => ({
           id: item.id,
-          userName: item.profiles?.username || "Coffee Lover",
-          userInitials: getUserInitials(item.profiles?.username || "Coffee Lover"),
-          userImage: item.profiles?.avatar_url || null,
+          userName: item.profile?.username || "Coffee Lover",
+          userInitials: getUserInitials(item.profile?.username || "Coffee Lover"),
+          userImage: item.profile?.avatar_url || null,
           coffeeImage: item.image_url || null,
           coffeeName: item.coffee_name,
           roastery: item.roaster,
