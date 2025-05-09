@@ -35,7 +35,7 @@ const Home = () => {
         .from('coffee_check_ins')
         .select(`
           *,
-          user:user_id(
+          user:user_id!user_id(
             profiles(username, avatar_url)
           )
         `)
