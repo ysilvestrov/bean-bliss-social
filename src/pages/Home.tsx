@@ -35,7 +35,7 @@ const Home = () => {
         .from('coffee_check_ins')
         .select(`
           *,
-          profiles:user_id(username, avatar_url)
+          profiles(username, avatar_url)
         `)
         .order('created_at', { ascending: false })
         .limit(20);
