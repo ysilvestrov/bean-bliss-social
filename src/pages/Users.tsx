@@ -43,7 +43,7 @@ const Users = () => {
         .from('user_followers')
         .select(`
           follower_id,
-          followers:follower_id(
+          followers:follower_id!user_id(
             id,
             profiles:profiles(username, avatar_url)
           )
@@ -70,7 +70,7 @@ const Users = () => {
         .from('user_followers')
         .select(`
           following_id,
-          following:following_id(
+          following:following_id!user_id(
             id,
             profiles:profiles(username, avatar_url)
           )

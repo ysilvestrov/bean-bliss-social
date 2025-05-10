@@ -80,7 +80,7 @@ const UserProfile = () => {
         .from('coffee_check_ins')
         .select(`
           *,
-          profiles:user_id(
+          profiles:user_id!user_id(
             username,
             avatar_url
           )
