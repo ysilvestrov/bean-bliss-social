@@ -43,9 +43,9 @@ const Users = () => {
         .from('user_followers')
         .select(`
           follower_id,
-          followers:follower_id(
+          followers:follower_id!follower_id(
             id,
-            profiles(username, avatar_url)
+            profiles!followers_id(username, avatar_url)
           )
         `)
         .eq('following_id', userId);
@@ -58,15 +58,25 @@ const Users = () => {
           variant: "destructive"
         });
       } else if (followersData) {
-        const processedFollowers = followersData.map(item => ({
-          id: item.follower_id,
-          name: item.followers?.profiles?.username || "User",
-          username: item.followers?.profiles?.username || "user",
-          avatar: item.followers?.profiles?.avatar_url || undefined,
-          initials: getUserInitials(item.followers?.profiles?.username || "User"),
-          status: "friend" as const
-        }));
-        setFollowers(processedFollowers);
+        // Get profiles directly
+        const followerIds = followersData.map(item => item.follower_id);
+        
+        const { data: followerProfiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', followerIds);
+          
+        if (followerProfiles) {
+          const processedFollowers = followerProfiles.map(profile => ({
+            id: profile.id,
+            name: profile.username || "User",
+            username: profile.username || "user",
+            avatar: profile.avatar_url || undefined,
+            initials: getUserInitials(profile.username || "User"),
+            status: "friend" as const
+          }));
+          setFollowers(processedFollowers);
+        }
       }
 
       // Load following (users the current user follows)
@@ -74,9 +84,9 @@ const Users = () => {
         .from('user_followers')
         .select(`
           following_id,
-          following:following_id(
+          following:following_id!following_id(
             id,
-            profiles(username, avatar_url)
+            profiles!following_id(username, avatar_url)
           )
         `)
         .eq('follower_id', userId);
@@ -89,15 +99,25 @@ const Users = () => {
           variant: "destructive"
         });
       } else if (followingData) {
-        const processedFollowing = followingData.map(item => ({
-          id: item.following_id,
-          name: item.following?.profiles?.username || "User",
-          username: item.following?.profiles?.username || "user",
-          avatar: item.following?.profiles?.avatar_url || undefined,
-          initials: getUserInitials(item.following?.profiles?.username || "User"),
-          status: "friend" as const
-        }));
-        setFollowing(processedFollowing);
+        // Get profiles directly
+        const followingIds = followingData.map(item => item.following_id);
+        
+        const { data: followingProfiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', followingIds);
+          
+        if (followingProfiles) {
+          const processedFollowing = followingProfiles.map(profile => ({
+            id: profile.id,
+            name: profile.username || "User",
+            username: profile.username || "user",
+            avatar: profile.avatar_url || undefined,
+            initials: getUserInitials(profile.username || "User"),
+            status: "friend" as const
+          }));
+          setFollowing(processedFollowing);
+        }
       }
     } catch (error) {
       console.error("Error loading follow data:", error);
@@ -124,7 +144,10 @@ const Users = () => {
 
       if (error) {
         console.error("Search error:", error);
-        toast.error("Search failed");
+        toast({
+          title: "Error",
+          description: "Search failed"
+        });
         return;
       }
 
@@ -183,7 +206,10 @@ const Users = () => {
       setSearchResults(formattedResults);
     } catch (error) {
       console.error("Search error:", error);
-      toast.error("Search failed");
+      toast({
+        title: "Error",
+        description: "Search failed"
+      });
     } finally {
       setIsSearching(false);
     }
@@ -219,15 +245,24 @@ const Users = () => {
 
         if (error) {
           if (error.code === '23505') { // Unique constraint violation
-            toast.error("You're already following this user");
+            toast({
+              title: "Error",
+              description: "You're already following this user"
+            });
           } else {
             console.error("Error following user:", error);
-            toast.error("Failed to follow user");
+            toast({
+              title: "Error",
+              description: "Failed to follow user"
+            });
           }
           return;
         }
 
-        toast.success("User followed successfully");
+        toast({
+          title: "Success",
+          description: "User followed successfully"
+        });
 
         // Update UI
         if (activeTab === "search") {
@@ -250,11 +285,17 @@ const Users = () => {
 
         if (error) {
           console.error("Error unfollowing user:", error);
-          toast.error("Failed to unfollow user");
+          toast({
+            title: "Error",
+            description: "Failed to unfollow user"
+          });
           return;
         }
 
-        toast.success("User unfollowed successfully");
+        toast({
+          title: "Success",
+          description: "User unfollowed successfully"
+        });
 
         // Update UI
         if (activeTab === "search") {
@@ -272,7 +313,10 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Follow/unfollow error:", error);
-      toast.error("Action failed");
+      toast({
+        title: "Error",
+        description: "Action failed"
+      });
     }
   };
 

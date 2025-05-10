@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -79,7 +80,7 @@ const UserProfile = () => {
         .from('coffee_check_ins')
         .select(`
           *,
-          profiles:user_id(
+          profiles:user_id!user_id(
             username,
             avatar_url
           )
