@@ -20,6 +20,7 @@ interface CheckInData {
 
 interface CoffeeCardProps {
   id?: string;
+  userId?: string;
   userName?: string;
   userImage?: string;
   coffeeImage?: string;
@@ -35,10 +36,13 @@ interface CoffeeCardProps {
   checkIn?: CheckInData;
   // Add onDelete for Profile page functionality
   onDelete?: (checkInId: string) => void;
+  // Add onUserClick for navigating to user profile
+  onUserClick?: () => void;
 }
 
 const CoffeeCard = ({
   id,
+  userId,
   userName,
   userImage,
   coffeeImage,
@@ -52,6 +56,7 @@ const CoffeeCard = ({
   userInitials,
   checkIn,
   onDelete,
+  onUserClick,
 }: CoffeeCardProps) => {
   // If checkIn prop is provided, use its values
   const checkInId = checkIn?.id || id;
@@ -68,7 +73,10 @@ const CoffeeCard = ({
     <div className="coffee-card mb-6">
       {(userName || timestamp) && (
         <div className="p-4 flex items-center space-x-3 border-b">
-          <Avatar className="h-10 w-10">
+          <Avatar 
+            className="h-10 w-10 cursor-pointer" 
+            onClick={onUserClick}
+          >
             {userImage ? (
               <AvatarImage src={userImage} alt={userName || ""} />
             ) : (
@@ -77,9 +85,12 @@ const CoffeeCard = ({
           </Avatar>
           <div>
             {userName && (
-              <Link to={`/user/${userName}`} className="font-medium hover:underline">
+              <button 
+                onClick={onUserClick} 
+                className="font-medium hover:underline cursor-pointer"
+              >
                 {userName}
-              </Link>
+              </button>
             )}
             {displayTimestamp && (
               <div className="text-sm text-gray-500 flex items-center">

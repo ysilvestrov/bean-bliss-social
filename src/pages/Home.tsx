@@ -5,11 +5,13 @@ import MainNav from "@/components/MainNav";
 import CoffeeCard from "@/components/CoffeeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/sonner";
 
 const Home = () => {
   const [feed, setFeed] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [feedType, setFeedType] = useState("friends"); // "friends" or "discover"
+  const [feedType, setFeedType] = useState("following"); // "following" or "discover"
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,19 +33,44 @@ const Home = () => {
   const loadFeed = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('coffee_check_ins')
         .select(`
           *,
-          user:user_id!user_id(
-            profiles(username, avatar_url)
+          profiles:user_id(
+            username,
+            avatar_url
           )
         `)
         .order('created_at', { ascending: false })
         .limit(20);
+        
+      // Filter by following if on following feed
+      if (feedType === "following") {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // Get users that the current user follows
+        const { data: followingData } = await supabase
+          .from('user_followers')
+          .select('following_id')
+          .eq('follower_id', user?.id);
+          
+        if (followingData && followingData.length > 0) {
+          const followingIds = followingData.map(f => f.following_id);
+          query = query.in('user_id', followingIds);
+        } else {
+          // If not following anyone, show empty state
+          setFeed([]);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching feed:", error);
+        toast.error("Failed to load feed");
         return;
       }
 
@@ -51,9 +78,10 @@ const Home = () => {
         // Transform data to match the format expected by CoffeeCard
         const formattedFeed = data.map(item => ({
           id: item.id,
-          userName: item.user?.profiles?.username || "Coffee Lover",
-          userInitials: getUserInitials(item.user?.profiles?.username || "Coffee Lover"),
-          userImage: item.user?.profiles?.avatar_url || null,
+          userId: item.user_id,
+          userName: item.profiles?.username || "Coffee Lover",
+          userInitials: getUserInitials(item.profiles?.username || "Coffee Lover"),
+          userImage: item.profiles?.avatar_url || null,
           coffeeImage: item.image_url || null,
           coffeeName: item.coffee_name,
           roastery: item.roaster,
@@ -68,6 +96,7 @@ const Home = () => {
       }
     } catch (error) {
       console.error("Error loading feed:", error);
+      toast.error("Error loading feed");
     } finally {
       setLoading(false);
     }
@@ -109,28 +138,17 @@ const Home = () => {
       <div className="container max-w-xl mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-coffee-dark">Feed</h1>
-          <div className="text-sm font-medium">
-            <button 
-              className={`mr-4 ${
-                feedType === "friends" 
-                  ? "text-coffee-dark border-b-2 border-coffee-dark" 
-                  : "text-gray-500 hover:text-coffee-dark"
-              }`}
-              onClick={() => setFeedType("friends")}
-            >
-              Friends
-            </button>
-            <button 
-              className={
-                feedType === "discover" 
-                  ? "text-coffee-dark border-b-2 border-coffee-dark" 
-                  : "text-gray-500 hover:text-coffee-dark"
-              }
-              onClick={() => setFeedType("discover")}
-            >
-              Discover
-            </button>
-          </div>
+          
+          <Tabs 
+            value={feedType} 
+            onValueChange={setFeedType}
+            className="w-auto"
+          >
+            <TabsList>
+              <TabsTrigger value="following">Following</TabsTrigger>
+              <TabsTrigger value="discover">Discover</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         
         {loading ? (
@@ -139,17 +157,35 @@ const Home = () => {
           </div>
         ) : feed.length > 0 ? (
           feed.map((item) => (
-            <CoffeeCard key={item.id} {...item} />
+            <CoffeeCard 
+              key={item.id} 
+              {...item} 
+              onUserClick={() => navigate(`/users/${item.userId}`)} 
+            />
           ))
         ) : (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-500">No coffee check-ins found.</p>
-            <button 
-              onClick={() => navigate('/check-in')} 
-              className="mt-4 text-coffee-dark hover:underline"
-            >
-              Create your first check-in!
-            </button>
+            {feedType === "following" ? (
+              <>
+                <p className="text-gray-500">You're not following anyone yet.</p>
+                <button 
+                  onClick={() => navigate('/users')} 
+                  className="mt-4 text-coffee-dark hover:underline"
+                >
+                  Find users to follow
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-500">No coffee check-ins found.</p>
+                <button 
+                  onClick={() => navigate('/check-in')} 
+                  className="mt-4 text-coffee-dark hover:underline"
+                >
+                  Create your first check-in!
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

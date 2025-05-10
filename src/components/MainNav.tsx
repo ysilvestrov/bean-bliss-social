@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Coffee, Home, Users, Bell, User, LogOut } from "lucide-react";
+import { Coffee, Home, Users, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,8 +61,8 @@ const MainNav = () => {
       icon: Coffee,
     },
     {
-      path: "/friends",
-      label: "Friends",
+      path: "/users",
+      label: "Users",
       icon: Users,
     },
     {

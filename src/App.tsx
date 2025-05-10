@@ -11,6 +11,8 @@ import Friends from "./pages/Friends";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Users from "./pages/Users";
+import UserProfile from "./pages/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/home" element={<Home />} />
           <Route path="/check-in" element={<CheckIn />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
