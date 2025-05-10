@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainNav from "@/components/MainNav";
@@ -37,7 +36,7 @@ const Home = () => {
         .from('coffee_check_ins')
         .select(`
           *,
-          profiles:user_id!user_id(
+          profiles:user_id(
             username,
             avatar_url
           )
