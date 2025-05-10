@@ -6,7 +6,7 @@ import CoffeeCard from "@/components/CoffeeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@/components/ui/use-toast";
 
 const Home = () => {
   const [feed, setFeed] = useState<any[]>([]);
@@ -37,7 +37,7 @@ const Home = () => {
         .from('coffee_check_ins')
         .select(`
           *,
-          profiles:user_id!user_id(
+          profiles:user_id(
             username,
             avatar_url
           )
@@ -70,7 +70,11 @@ const Home = () => {
 
       if (error) {
         console.error("Error fetching feed:", error);
-        toast.error("Failed to load feed");
+        toast({
+          title: "Error",
+          description: "Failed to load feed",
+          variant: "destructive"
+        });
         return;
       }
 
@@ -96,7 +100,11 @@ const Home = () => {
       }
     } catch (error) {
       console.error("Error loading feed:", error);
-      toast.error("Error loading feed");
+      toast({
+        title: "Error",
+        description: "Error loading feed",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

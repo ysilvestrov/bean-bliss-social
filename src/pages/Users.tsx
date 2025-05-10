@@ -7,7 +7,7 @@ import MainNav from "@/components/MainNav";
 import FriendCard from "@/components/FriendCard";
 import { Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@/components/ui/use-toast";
 
 const Users = () => {
   const [activeTab, setActiveTab] = useState("search");
@@ -43,23 +43,27 @@ const Users = () => {
         .from('user_followers')
         .select(`
           follower_id,
-          followers:follower_id!user_id(
+          followers:follower_id(
             id,
-            profiles:profiles(username, avatar_url)
+            profiles(username, avatar_url)
           )
         `)
         .eq('following_id', userId);
 
       if (followersError) {
         console.error("Error loading followers:", followersError);
-        toast.error("Failed to load followers");
+        toast({
+          title: "Error",
+          description: "Failed to load followers",
+          variant: "destructive"
+        });
       } else if (followersData) {
         const processedFollowers = followersData.map(item => ({
           id: item.follower_id,
-          name: item.followers.profiles?.username || "User",
-          username: item.followers.profiles?.username || "user",
-          avatar: item.followers.profiles?.avatar_url || undefined,
-          initials: getUserInitials(item.followers.profiles?.username || "User"),
+          name: item.followers?.profiles?.username || "User",
+          username: item.followers?.profiles?.username || "user",
+          avatar: item.followers?.profiles?.avatar_url || undefined,
+          initials: getUserInitials(item.followers?.profiles?.username || "User"),
           status: "friend" as const
         }));
         setFollowers(processedFollowers);
@@ -70,30 +74,38 @@ const Users = () => {
         .from('user_followers')
         .select(`
           following_id,
-          following:following_id!user_id(
+          following:following_id(
             id,
-            profiles:profiles(username, avatar_url)
+            profiles(username, avatar_url)
           )
         `)
         .eq('follower_id', userId);
 
       if (followingError) {
         console.error("Error loading following:", followingError);
-        toast.error("Failed to load following");
+        toast({
+          title: "Error",
+          description: "Failed to load following",
+          variant: "destructive"
+        });
       } else if (followingData) {
         const processedFollowing = followingData.map(item => ({
           id: item.following_id,
-          name: item.following.profiles?.username || "User",
-          username: item.following.profiles?.username || "user",
-          avatar: item.following.profiles?.avatar_url || undefined,
-          initials: getUserInitials(item.following.profiles?.username || "User"),
+          name: item.following?.profiles?.username || "User",
+          username: item.following?.profiles?.username || "user",
+          avatar: item.following?.profiles?.avatar_url || undefined,
+          initials: getUserInitials(item.following?.profiles?.username || "User"),
           status: "friend" as const
         }));
         setFollowing(processedFollowing);
       }
     } catch (error) {
       console.error("Error loading follow data:", error);
-      toast.error("Error loading follow data");
+      toast({
+        title: "Error",
+        description: "Error loading follow data",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
