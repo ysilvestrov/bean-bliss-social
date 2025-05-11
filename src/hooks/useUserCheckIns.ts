@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedItem } from "@/hooks/useFeed";
+import { getUserInitials, formatDate } from "@/utils/formatting";
 
 export const useUserCheckIns = (userId: string | undefined) => {
   const [checkIns, setCheckIns] = useState<FeedItem[]>([]);
@@ -19,7 +20,7 @@ export const useUserCheckIns = (userId: string | undefined) => {
         .from('coffee_check_ins')
         .select(`
           *,
-          profiles(
+          profiles:user_id(
             username,
             avatar_url
           )
@@ -55,35 +56,6 @@ export const useUserCheckIns = (userId: string | undefined) => {
       setCheckIns(formattedCheckIns);
     } catch (error) {
       console.error("Error loading check-ins:", error);
-    }
-  };
-
-  // Helper function to get user initials from username
-  const getUserInitials = (username: string) => {
-    return username
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substr(0, 2);
-  };
-
-  // Helper function to format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMillis = now.getTime() - date.getTime();
-    const diffInHours = diffInMillis / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return "Just now";
-    } else if (diffInHours < 24) {
-      const hours = Math.floor(diffInHours);
-      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-    } else if (diffInHours < 48) {
-      return "Yesterday";
-    } else {
-      return date.toLocaleDateString();
     }
   };
 
