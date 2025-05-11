@@ -2,52 +2,20 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Coffee, Settings, LogOut } from "lucide-react";
+import { Coffee } from "lucide-react";
 import MainNav from "@/components/MainNav";
-import CoffeeCard from "@/components/CoffeeCard";
-import FriendCard from "@/components/FriendCard";
 import { toast } from "@/components/ui/sonner";
 import { useAuthProfile } from "@/hooks/useAuthProfile";
 import { useUserCheckIns } from "@/hooks/useUserCheckIns";
-import { formatDate } from "@/utils/formatting";
+import { useFriends } from "@/hooks/useFriends";
+import { supabase } from "@/integrations/supabase/client";
 import LoadingState from "@/components/profile/LoadingState";
-
-// Define the correct type for status
-type FriendStatus = "friend" | "pending" | "none";
-
-// Mock friends with correct status types
-const mockFriends = [
-  {
-    id: "f1",
-    name: "Alex Johnson",
-    username: "alexj",
-    initials: "AJ",
-    status: "friend" as FriendStatus,
-    checkIns: 89,
-    avatar: "https://i.pravatar.cc/150?u=alexj"
-  },
-  {
-    id: "f2",
-    name: "Sam Taylor",
-    username: "samt",
-    initials: "ST",
-    status: "friend" as FriendStatus,
-    checkIns: 56
-  },
-  {
-    id: "f3",
-    name: "Jordan Lee",
-    username: "jlee",
-    initials: "JL",
-    status: "friend" as FriendStatus,
-    checkIns: 124,
-    avatar: "https://i.pravatar.cc/150?u=jlee"
-  }
-];
+import AuthProfileHeader from "@/components/profile/AuthProfileHeader";
+import CheckInsList from "@/components/profile/CheckInsList";
+import FriendsList from "@/components/profile/FriendsList";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("check-ins");
-  const [friends, setFriends] = useState(mockFriends);
   
   const {
     profile,
@@ -56,7 +24,8 @@ const Profile = () => {
     handleSignOut
   } = useAuthProfile();
   
-  const { checkIns, checkInsCount } = useUserCheckIns(profile?.id);
+  const { checkIns, checkInsCount, setCheckIns } = useUserCheckIns(profile?.id);
+  const { friends, handleFriendAction } = useFriends();
 
   const handleDeleteCheckIn = async (checkInId: string) => {
     try {
@@ -67,11 +36,7 @@ const Profile = () => {
         
       if (error) {
         console.error("Error deleting check-in:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete check-in",
-          variant: "destructive"
-        });
+        toast.error("Failed to delete check-in");
         return;
       }
       
@@ -79,17 +44,10 @@ const Profile = () => {
       const updatedCheckIns = checkIns.filter(checkIn => checkIn.id !== checkInId);
       setCheckIns(updatedCheckIns);
       
-      toast({
-        title: "Check-in deleted.",
-        description: "Your coffee check-in has been successfully removed."
-      });
+      toast.success("Your coffee check-in has been successfully removed.");
     } catch (error) {
       console.error("Error deleting check-in:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete check-in",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete check-in");
     }
   };
 
@@ -110,67 +68,17 @@ const Profile = () => {
     );
   }
 
-  const joinDate = formatDate(profile.created_at);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <MainNav />
       
       <div className="container mx-auto px-4 py-6">
         {/* Profile Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-            <div className="w-24 h-24 rounded-full bg-coffee-light flex items-center justify-center text-coffee-dark text-3xl font-bold overflow-hidden">
-              {profile.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.username} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                profile.username.substring(0, 2).toUpperCase()
-              )}
-            </div>
-            
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{profile.username}</h1>
-              <p className="text-gray-600">@{profile.username}</p>
-              <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
-                <span>Joined {joinDate}</span>
-              </div>
-              <div className="flex flex-wrap gap-6 mt-4">
-                <div>
-                  <div className="font-bold text-xl">{stats.checkInsCount}</div>
-                  <div className="text-sm text-gray-600">Check-ins</div>
-                </div>
-                <div>
-                  <div className="font-bold text-xl">{stats.followersCount}</div>
-                  <div className="text-sm text-gray-600">Followers</div>
-                </div>
-                <div>
-                  <div className="font-bold text-xl">{stats.followingCount}</div>
-                  <div className="text-sm text-gray-600">Following</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-red-500 hover:text-red-600"
-                onClick={handleSignOut}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
+        <AuthProfileHeader 
+          profile={profile}
+          stats={stats}
+          onSignOut={handleSignOut}
+        />
         
         {/* Tabs for Check-ins and Friends */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -209,15 +117,10 @@ const Profile = () => {
           </TabsContent>
           
           <TabsContent value="friends">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {friends.map((friend) => (
-                <FriendCard
-                  key={friend.id}
-                  variant="compact"
-                  {...friend}
-                />
-              ))}
-            </div>
+            <FriendsList 
+              friends={friends}
+              onAction={handleFriendAction}
+            />
           </TabsContent>
         </Tabs>
       </div>
