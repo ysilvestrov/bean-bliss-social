@@ -61,6 +61,7 @@ export const useUserCheckIns = (userId: string | undefined) => {
 
   return {
     checkIns,
-    checkInsCount
+    checkInsCount,
+    setCheckIns
   };
 };
