@@ -40,7 +40,7 @@ export const useAuth = () => {
       
       if (userId) {
         try {
-          // Fetch user profile
+          // Fetch user profile - FIXED: using .eq() method instead of query parameter
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
