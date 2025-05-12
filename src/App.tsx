@@ -11,6 +11,7 @@ import Friends from "./pages/Friends";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Users from "./pages/Users";
 import UserProfile from "./pages/UserProfile";
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
