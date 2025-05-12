@@ -50,9 +50,15 @@ export const useAuth = () => {
             .single();
 
           if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            toast("Error fetching profile data");
-            return;
+            // If the error is that no rows were found, we need to create a profile
+            if (profileError.code === 'PGRST116') {
+              await createUserProfile(userId);
+              return;
+            } else {
+              console.error("Error fetching profile:", profileError);
+              toast("Error fetching profile data");
+              return;
+            }
           }
 
           console.log("Profile data retrieved:", profileData);
@@ -68,6 +74,50 @@ export const useAuth = () => {
 
     initializeAuth();
   }, [navigate]);
+
+  // Function to create a user profile if it doesn't exist
+  const createUserProfile = async (userId: string) => {
+    try {
+      console.log("Creating new profile for user ID:", userId);
+
+      // Get user details from auth to use for the profile
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      if (!user) {
+        console.error("Could not get user data for profile creation");
+        return;
+      }
+
+      // Extract username from email or use user ID if not available
+      const username = user.email ? user.email.split('@')[0] : `user_${userId.substring(0, 8)}`;
+      
+      // Create new profile
+      const { data: newProfile, error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          username: username,
+          avatar_url: user.user_metadata.avatar_url || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating profile:", error);
+        toast("Error creating user profile");
+        return;
+      }
+
+      console.log("Profile created successfully:", newProfile);
+      setProfile(newProfile);
+    } catch (error) {
+      console.error("Error in profile creation:", error);
+      toast("Error creating user profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
