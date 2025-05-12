@@ -52,7 +52,6 @@ export const useFriends = () => {
   const handleFriendAction = (friendId: string, action: 'add' | 'accept' | 'remove') => {
     // To be implemented with real API in future
     toast({
-      title: "Friend action",
       description: `Action "${action}" on friend ID: ${friendId}`
     });
   };

@@ -13,6 +13,7 @@ import LoadingState from "@/components/profile/LoadingState";
 import AuthProfileHeader from "@/components/profile/AuthProfileHeader";
 import CheckInsList from "@/components/profile/CheckInsList";
 import FriendsList from "@/components/profile/FriendsList";
+import CoffeeCard from "@/components/CoffeeCard";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("check-ins");
