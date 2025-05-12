@@ -40,7 +40,9 @@ export const useAuth = () => {
       
       if (userId) {
         try {
-          // Fetch user profile - FIXED: using .eq() method instead of query parameter
+          console.log("Fetching profile for user ID:", userId);
+          
+          // Fixed query - properly using the .eq() method
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -53,6 +55,7 @@ export const useAuth = () => {
             return;
           }
 
+          console.log("Profile data retrieved:", profileData);
           setProfile(profileData);
         } catch (error) {
           console.error("Error fetching user data:", error);
