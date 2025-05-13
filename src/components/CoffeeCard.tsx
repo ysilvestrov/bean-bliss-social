@@ -1,9 +1,10 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Coffee, MapPin, Calendar } from "lucide-react";
+import { Coffee, MapPin, Calendar, Share2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 import StarRating from "./StarRating";
 
 interface CheckInData {
@@ -68,6 +69,39 @@ const CoffeeCard = ({
   const displayComment = checkIn?.notes || comment;
   const displayImage = checkIn?.image || coffeeImage;
   const displayTimestamp = checkIn?.date ? new Date(checkIn.date).toLocaleDateString() : timestamp;
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${displayCoffeeName} by ${displayRoastery}`,
+      text: `Check out this coffee: ${displayCoffeeName} by ${displayRoastery}, brewed with ${displayBrewMethod}. Rated ${displayRating}/5!`,
+      url: window.location.origin + `/share?id=${checkInId}`
+    };
+    
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        // Use native sharing on mobile devices
+        await navigator.share(shareData);
+        toast({
+          title: "Shared!",
+          description: "Thanks for sharing this coffee check-in!"
+        });
+      } else {
+        // Fallback - copy link to clipboard
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copied!",
+          description: "Coffee check-in link has been copied to clipboard."
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      toast({
+        title: "Sharing failed",
+        description: "Unable to share this coffee check-in.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="coffee-card mb-6">
@@ -146,7 +180,13 @@ const CoffeeCard = ({
               Delete
             </Button>
           ) : (
-            <Button variant="ghost" size="sm" className="text-gray-600">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-gray-600"
+              onClick={handleShare}
+            >
+              <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
           )}
