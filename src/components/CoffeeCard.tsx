@@ -1,11 +1,12 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Coffee, MapPin, Calendar, Share2 } from "lucide-react";
+import { Coffee, MapPin, Calendar, Share2, Heart } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import StarRating from "./StarRating";
+import { useLikes } from "@/hooks/useLikes";
 
 interface CheckInData {
   id: string;
@@ -70,6 +71,9 @@ const CoffeeCard = ({
   const displayImage = checkIn?.image || coffeeImage;
   const displayTimestamp = checkIn?.date ? new Date(checkIn.date).toLocaleDateString() : timestamp;
 
+  // Use the useLikes hook
+  const { likesCount, isLiked, isLoading, toggleLike } = useLikes(checkInId || "");
+
   const handleShare = async () => {
     const shareData = {
       title: `${displayCoffeeName} by ${displayRoastery}`,
@@ -101,6 +105,10 @@ const CoffeeCard = ({
         variant: "destructive"
       });
     }
+  };
+
+  const handleLike = () => {
+    toggleLike();
   };
 
   return (
@@ -169,8 +177,15 @@ const CoffeeCard = ({
         {displayComment && <p className="text-sm mt-2">{displayComment}</p>}
 
         <div className="mt-4 flex justify-between">
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            Like
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-gray-600 ${isLiked ? 'text-red-500' : ''}`}
+            onClick={handleLike}
+            disabled={isLoading}
+          >
+            <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
+            {likesCount > 0 && likesCount}
           </Button>
           <Button variant="ghost" size="sm" className="text-gray-600">
             Comment
