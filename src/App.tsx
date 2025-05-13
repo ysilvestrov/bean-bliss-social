@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
 import Friends from "./pages/Friends";
 import Profile from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/users" element={<Users />} />
           <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/edit" element={<ProfileEdit />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />

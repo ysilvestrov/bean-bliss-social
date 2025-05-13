@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, LogOut } from "lucide-react";
 import { AuthProfileData } from "@/hooks/useAuthProfile";
 import { formatDate } from "@/utils/formatting";
+import { Link } from "react-router-dom";
 
 interface AuthProfileHeaderProps {
   profile: AuthProfileData;
@@ -60,9 +61,11 @@ const AuthProfileHeader: React.FC<AuthProfileHeaderProps> = ({
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
-          <Button variant="outline" size="sm">
-            <Settings className="w-4 h-4 mr-2" />
-            Edit Profile
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/profile/edit">
+              <Settings className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Link>
           </Button>
           <Button 
             variant="outline" 
