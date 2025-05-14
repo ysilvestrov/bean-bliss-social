@@ -17,9 +17,9 @@ const FeedContent = ({ loading, feed, feedType }: FeedContentProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up real-time subscription for likes
+    // Set up real-time subscription for likes and comments
     const channel = supabase
-      .channel('public:coffee_likes')
+      .channel('public:realtime-updates')
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -27,8 +27,19 @@ const FeedContent = ({ loading, feed, feedType }: FeedContentProps) => {
           table: 'coffee_likes' 
         }, 
         (payload) => {
-          console.log('Real-time update received:', payload);
+          console.log('Real-time like update received:', payload);
           // The actual like state is managed in the useLikes hook per component
+        }
+      )
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'coffee_comments'
+        },
+        (payload) => {
+          console.log('Real-time comment update received:', payload);
+          // The actual comments state is managed in the useComments hook
         }
       )
       .subscribe();

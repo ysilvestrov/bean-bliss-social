@@ -1,12 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Coffee, MapPin, Calendar, Share2, Heart } from "lucide-react";
+import { Coffee, MapPin, Calendar, Share2, Heart, MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import StarRating from "./StarRating";
 import { useLikes } from "@/hooks/useLikes";
+import CommentsDialog from "./CommentsDialog";
 
 interface CheckInData {
   id: string;
@@ -74,6 +75,9 @@ const CoffeeCard = ({
   // Use the useLikes hook
   const { likesCount, isLiked, isLoading, toggleLike } = useLikes(checkInId || "");
 
+  // State for comment dialog
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  
   const handleShare = async () => {
     const shareData = {
       title: `${displayCoffeeName} by ${displayRoastery}`,
@@ -109,6 +113,10 @@ const CoffeeCard = ({
 
   const handleLike = () => {
     toggleLike();
+  };
+
+  const handleOpenComments = () => {
+    setCommentsOpen(true);
   };
 
   return (
@@ -187,7 +195,13 @@ const CoffeeCard = ({
             <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
             {likesCount > 0 && likesCount}
           </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-gray-600"
+            onClick={handleOpenComments}
+          >
+            <MessageSquare className="h-4 w-4 mr-1" />
             Comment
           </Button>
           {onDelete ? (
@@ -207,6 +221,15 @@ const CoffeeCard = ({
           )}
         </div>
       </div>
+      
+      {checkInId && (
+        <CommentsDialog 
+          open={commentsOpen}
+          onOpenChange={setCommentsOpen}
+          checkInId={checkInId}
+          commentsCount={0} // This will be updated by the CommentsDialog component
+        />
+      )}
     </div>
   );
 };

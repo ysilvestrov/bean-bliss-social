@@ -56,6 +56,41 @@ export type Database = {
           },
         ]
       }
+      coffee_comments: {
+        Row: {
+          check_in_id: string
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_in_id: string
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_in_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coffee_comments_check_in_id_fkey"
+            columns: ["check_in_id"]
+            isOneToOne: false
+            referencedRelation: "coffee_check_ins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coffee_likes: {
         Row: {
           check_in_id: string
