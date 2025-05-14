@@ -41,13 +41,7 @@ const Users = () => {
       // Load followers (users who follow the current user)
       const { data: followersData, error: followersError } = await supabase
         .from('user_followers')
-        .select(`
-          follower_id,
-          followers:follower_id!follower_id(
-            id,
-            profiles!followers_id(username, avatar_url)
-          )
-        `)
+        .select('follower_id')
         .eq('following_id', userId);
 
       if (followersError) {
@@ -82,13 +76,7 @@ const Users = () => {
       // Load following (users the current user follows)
       const { data: followingData, error: followingError } = await supabase
         .from('user_followers')
-        .select(`
-          following_id,
-          following:following_id!following_id(
-            id,
-            profiles!following_id(username, avatar_url)
-          )
-        `)
+        .select('following_id')
         .eq('follower_id', userId);
 
       if (followingError) {
