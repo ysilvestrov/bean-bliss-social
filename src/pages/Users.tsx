@@ -8,303 +8,50 @@ import FriendCard from "@/components/FriendCard";
 import { Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useFollowData } from "@/hooks/useFollowData";
+import { useUserSearch } from "@/hooks/useUserSearch";
+import { UserProfile, FollowStatus } from "@/types/user";
 
-const Users = () => {
-  const [activeTab, setActiveTab] = useState("search");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [followers, setFollowers] = useState<any[]>([]);
-  const [following, setFollowing] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+const Users: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>("search");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const { 
+    followers, 
+    following, 
+    loading, 
+    loadFollowData,
+    handleFollowAction 
+  } = useFollowData(currentUserId);
+
+  const { 
+    searchResults, 
+    isSearching, 
+    performSearch 
+  } = useUserSearch(currentUserId);
 
   useEffect(() => {
     const initialize = async () => {
-      // Check if user is logged in
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        return;
+      if (session) {
+        setCurrentUserId(session.user.id);
+        loadFollowData(session.user.id);
       }
-
-      setCurrentUserId(session.user.id);
-      loadFollowData(session.user.id);
     };
 
     initialize();
   }, []);
 
-  const loadFollowData = async (userId: string) => {
-    setLoading(true);
-
-    try {
-      // Load followers (users who follow the current user)
-      const { data: followersData, error: followersError } = await supabase
-        .from('user_followers')
-        .select('follower_id')
-        .eq('following_id', userId);
-
-      if (followersError) {
-        console.error("Error loading followers:", followersError);
-        toast({
-          title: "Error",
-          description: "Failed to load followers",
-          variant: "destructive"
-        });
-      } else if (followersData) {
-        // Get profiles directly
-        const followerIds = followersData.map(item => item.follower_id);
-        
-        const { data: followerProfiles } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', followerIds);
-          
-        if (followerProfiles) {
-          const processedFollowers = followerProfiles.map(profile => ({
-            id: profile.id,
-            name: profile.username || "User",
-            username: profile.username || "user",
-            avatar: profile.avatar_url || undefined,
-            initials: getUserInitials(profile.username || "User"),
-            status: "friend" as const
-          }));
-          setFollowers(processedFollowers);
-        }
-      }
-
-      // Load following (users the current user follows)
-      const { data: followingData, error: followingError } = await supabase
-        .from('user_followers')
-        .select('following_id')
-        .eq('follower_id', userId);
-
-      if (followingError) {
-        console.error("Error loading following:", followingError);
-        toast({
-          title: "Error",
-          description: "Failed to load following",
-          variant: "destructive"
-        });
-      } else if (followingData) {
-        // Get profiles directly
-        const followingIds = followingData.map(item => item.following_id);
-        
-        const { data: followingProfiles } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', followingIds);
-          
-        if (followingProfiles) {
-          const processedFollowing = followingProfiles.map(profile => ({
-            id: profile.id,
-            name: profile.username || "User",
-            username: profile.username || "user",
-            avatar: profile.avatar_url || undefined,
-            initials: getUserInitials(profile.username || "User"),
-            status: "friend" as const
-          }));
-          setFollowing(processedFollowing);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading follow data:", error);
-      toast({
-        title: "Error",
-        description: "Error loading follow data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .ilike('username', `%${searchTerm}%`)
-        .limit(10);
-
-      if (error) {
-        console.error("Search error:", error);
-        toast({
-          title: "Error",
-          description: "Search failed"
-        });
-        return;
-      }
-
-      // Check if users are being followed
-      const userStatuses = await Promise.all(
-        data.map(async (user) => {
-          // Skip current user
-          if (user.id === currentUserId) {
-            return { ...user, status: "self" };
-          }
-
-          // Check if the current user is following this user
-          const { data: followData } = await supabase
-            .from('user_followers')
-            .select()
-            .eq('follower_id', currentUserId)
-            .eq('following_id', user.id)
-            .single();
-
-          // Check if this user is following the current user
-          const { data: isFollowerData } = await supabase
-            .from('user_followers')
-            .select()
-            .eq('follower_id', user.id)
-            .eq('following_id', currentUserId)
-            .single();
-
-          let status = "none";
-          if (followData && isFollowerData) {
-            status = "mutual";
-          } else if (followData) {
-            status = "friend";
-          } else if (isFollowerData) {
-            status = "follower";
-          }
-
-          return {
-            ...user,
-            status
-          };
-        })
-      );
-
-      // Format for FriendCard
-      const formattedResults = userStatuses
-        .filter(user => user.status !== "self") // Filter out current user
-        .map(user => ({
-          id: user.id,
-          name: user.username,
-          username: user.username,
-          avatar: user.avatar_url || undefined,
-          initials: getUserInitials(user.username),
-          status: user.status === "friend" || user.status === "mutual" ? "friend" : "none"
-        }));
-
-      setSearchResults(formattedResults);
-    } catch (error) {
-      console.error("Search error:", error);
-      toast({
-        title: "Error",
-        description: "Search failed"
-      });
-    } finally {
-      setIsSearching(false);
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      performSearch(searchTerm);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
-    }
-  };
-
-  const getUserInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substr(0, 2);
-  };
-
-  const handleFollowAction = async (userId: string, action: 'add' | 'accept' | 'remove') => {
-    if (!currentUserId) return;
-
-    try {
-      if (action === 'add' || action === 'accept') {
-        // Follow user
-        const { error } = await supabase
-          .from('user_followers')
-          .insert({
-            follower_id: currentUserId,
-            following_id: userId
-          });
-
-        if (error) {
-          if (error.code === '23505') { // Unique constraint violation
-            toast({
-              title: "Error",
-              description: "You're already following this user"
-            });
-          } else {
-            console.error("Error following user:", error);
-            toast({
-              title: "Error",
-              description: "Failed to follow user"
-            });
-          }
-          return;
-        }
-
-        toast({
-          title: "Success",
-          description: "User followed successfully"
-        });
-
-        // Update UI
-        if (activeTab === "search") {
-          setSearchResults(prev =>
-            prev.map(user =>
-              user.id === userId ? { ...user, status: "friend" } : user
-            )
-          );
-        }
-        
-        // Refresh follow data
-        loadFollowData(currentUserId);
-      } else if (action === 'remove') {
-        // Unfollow user
-        const { error } = await supabase
-          .from('user_followers')
-          .delete()
-          .eq('follower_id', currentUserId)
-          .eq('following_id', userId);
-
-        if (error) {
-          console.error("Error unfollowing user:", error);
-          toast({
-            title: "Error",
-            description: "Failed to unfollow user"
-          });
-          return;
-        }
-
-        toast({
-          title: "Success",
-          description: "User unfollowed successfully"
-        });
-
-        // Update UI
-        if (activeTab === "search") {
-          setSearchResults(prev =>
-            prev.map(user =>
-              user.id === userId ? { ...user, status: "none" } : user
-            )
-          );
-        } else if (activeTab === "following") {
-          setFollowing(prev => prev.filter(user => user.id !== userId));
-        }
-        
-        // Refresh follow data
-        loadFollowData(currentUserId);
-      }
-    } catch (error) {
-      console.error("Follow/unfollow error:", error);
-      toast({
-        title: "Error",
-        description: "Action failed"
-      });
     }
   };
 
@@ -347,7 +94,7 @@ const Users = () => {
                   <FriendCard
                     key={user.id}
                     {...user}
-                    onAction={handleFollowAction}
+                    onAction={(userId, action) => handleFollowAction(userId, action)}
                   />
                 ))}
               </div>
@@ -369,7 +116,7 @@ const Users = () => {
                   <FriendCard
                     key={follower.id}
                     {...follower}
-                    onAction={handleFollowAction}
+                    onAction={(userId, action) => handleFollowAction(userId, action)}
                   />
                 ))}
               </div>
@@ -391,7 +138,7 @@ const Users = () => {
                   <FriendCard
                     key={follow.id}
                     {...follow}
-                    onAction={handleFollowAction}
+                    onAction={(userId, action) => handleFollowAction(userId, action)}
                   />
                 ))}
               </div>
