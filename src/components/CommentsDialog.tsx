@@ -24,7 +24,7 @@ interface CommentsDialogProps {
 const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: CommentsDialogProps) => {
   const [newComment, setNewComment] = useState("");
   const { comments, isLoading, isSubmitting, addComment, deleteComment } = useComments(checkInId);
-  const { user } = useAuth();
+  const { profile } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,10 +46,10 @@ const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: Commen
             <MessageSquare className="mr-2 h-5 w-5" />
             Comments ({commentsCount})
           </DialogTitle>
-          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          {/* <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
-          </DialogClose>
+          </DialogClose> */}
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto space-y-4 py-4">
@@ -78,7 +78,7 @@ const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: Commen
                   </div>
                   <p className="text-sm mt-1">{comment.content}</p>
                 </div>
-                {user?.id === comment.userId && (
+                {profile?.id === comment.userId && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -94,7 +94,7 @@ const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: Commen
           )}
         </div>
 
-        {user && (
+        {profile && (
           <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2">
             <Textarea
               placeholder="Add a comment..."
