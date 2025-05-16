@@ -18,12 +18,11 @@ interface CommentsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   checkInId: string;
-  commentsCount: number;
 }
 
-const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: CommentsDialogProps) => {
+const CommentsDialog = ({ open, onOpenChange, checkInId }: CommentsDialogProps) => {
   const [newComment, setNewComment] = useState("");
-  const { comments, isLoading, isSubmitting, addComment, deleteComment } = useComments(checkInId);
+  const { comments, isLoading, isSubmitting, addComment, deleteComment, fetchComments } = useComments(checkInId);
   const { profile } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,11 +30,13 @@ const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: Commen
     if (!newComment.trim()) return;
     
     await addComment(newComment);
+    await fetchComments();
     setNewComment("");
   };
 
   const handleDelete = async (commentId: string) => {
     await deleteComment(commentId);
+    await fetchComments();
   };
 
   return (
@@ -44,12 +45,8 @@ const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: Commen
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <MessageSquare className="mr-2 h-5 w-5" />
-            Comments ({commentsCount})
+            Comments ({comments.length})
           </DialogTitle>
-          {/* <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </DialogClose> */}
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto space-y-4 py-4">
@@ -109,7 +106,7 @@ const CommentsDialog = ({ open, onOpenChange, checkInId, commentsCount }: Commen
                 disabled={!newComment.trim() || isSubmitting}
                 className="flex items-center gap-2"
               >
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isSubmitting && (<span><Loader2 className="h-4 w-4 animate-spin" /></span>)}
                 Post Comment
               </Button>
             </div>

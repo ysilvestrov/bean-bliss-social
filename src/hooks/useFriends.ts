@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
 // Define the correct type for status
-export type FriendStatus = "friend" | "pending" | "none";
+export type FriendStatus = "friend" | "follower" | "following" | "none";
 
 // Define the friend type
 export interface Friend {

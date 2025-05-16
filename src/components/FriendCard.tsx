@@ -11,7 +11,7 @@ interface FriendCardProps {
   username: string;
   avatar?: string;
   initials: string;
-  status?: "friend" | "pending" | "none";
+  status?: "friend" | "follower" | "following" | "none" | "self";
   checkIns?: number;
   variant?: "compact" | "full";
   className?: string;
@@ -75,14 +75,14 @@ const FriendCard = ({
             </Button>
           )}
           
-          {status === "pending" && (
+          {status === "follower" && (
             <div className="flex gap-2">
               <Button 
                 variant="default" 
                 className="flex-1 bg-coffee-dark hover:bg-coffee-dark/90"
-                onClick={() => onAction?.(id, 'accept')}
+                onClick={() => onAction?.(id, 'add')}
               >
-                Accept
+                Follow Back
               </Button>
               <Button 
                 variant="outline" 
@@ -94,13 +94,13 @@ const FriendCard = ({
             </div>
           )}
           
-          {status === "friend" && (
+          {(status === "friend" || status === "following") && (
             <Button 
               variant="outline" 
               className="w-full"
               onClick={() => onAction?.(id, 'remove')}
             >
-              Unfriend
+              Unfollow
             </Button>
           )}
         </div>

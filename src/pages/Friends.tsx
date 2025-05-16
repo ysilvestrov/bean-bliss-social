@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 
 // Let's define the correct type for status
-type FriendStatus = "friend" | "pending" | "none";
+type FriendStatus = "friend" | "follower" | "following" | "none" | "self";
 
 // Define the mock data with correct status types
 const mockFriends = [
@@ -136,7 +136,7 @@ const Friends = () => {
       // Move from suggestions to pending
       const friendToAdd = suggestions.find((friend) => friend.id === id);
       if (friendToAdd) {
-        setPendingFriends([...pendingFriends, { ...friendToAdd, status: "pending" }]);
+        setPendingFriends([...pendingFriends, { ...friendToAdd, status: "none" }]);
         setSuggestions(suggestions.filter((friend) => friend.id !== id));
         toast({
           title: "Friend Request Sent!",

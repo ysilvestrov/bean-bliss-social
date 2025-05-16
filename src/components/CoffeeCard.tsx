@@ -227,7 +227,6 @@ const CoffeeCard = ({
           open={commentsOpen}
           onOpenChange={setCommentsOpen}
           checkInId={checkInId}
-          commentsCount={0} // This will be updated by the CommentsDialog component
         />
       )}
     </div>

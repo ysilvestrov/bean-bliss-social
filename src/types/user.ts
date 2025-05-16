@@ -1,4 +1,4 @@
-export type FollowStatus = 'none' | 'friend' | 'follower' | 'mutual' | 'self';
+export type FollowStatus = 'none' | 'friend' | 'follower' | 'following' | 'self';
 
 export interface UserProfile {
   id: string;
