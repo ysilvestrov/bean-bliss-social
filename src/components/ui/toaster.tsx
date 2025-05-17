@@ -10,13 +10,25 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts, dispatch } = useToast()
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {toasts.map(function ({ id, title, description, action, isDismissing, ...props }) {
         return (
-          <Toast key={id} {...props}>
+          <Toast
+            key={id}
+            {...props}
+            open={!isDismissing}
+            onOpenChange={(open) => {
+              if (!open) {
+                dispatch({
+                  type: "REMOVE_TOAST",
+                  toastId: id,
+                })
+              }
+            }}
+          >
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
