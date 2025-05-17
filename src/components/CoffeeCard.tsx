@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import StarRating from "./StarRating";
 import { useLikes } from "@/hooks/useLikes";
+import { useComments } from "@/hooks/useComments";
 import CommentsDialog from "./CommentsDialog";
 
 interface CheckInData {
@@ -72,8 +73,9 @@ const CoffeeCard = ({
   const displayImage = checkIn?.image || coffeeImage;
   const displayTimestamp = checkIn?.date ? new Date(checkIn.date).toLocaleDateString() : timestamp;
 
-  // Use the useLikes hook
+  // Use the useLikes and useComments hooks
   const { likesCount, isLiked, isLoading, toggleLike } = useLikes(checkInId || "");
+  const { commentsCount } = useComments(checkInId || "");
 
   // State for comment dialog
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -202,7 +204,7 @@ const CoffeeCard = ({
             onClick={handleOpenComments}
           >
             <MessageSquare className="h-4 w-4 mr-1" />
-            Comment
+            {commentsCount > 0 && commentsCount}
           </Button>
           {onDelete ? (
             <Button variant="ghost" size="sm" onClick={() => onDelete(checkInId || "")} className="text-gray-600">

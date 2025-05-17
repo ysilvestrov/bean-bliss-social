@@ -21,6 +21,8 @@ export function useComments(checkInId: string) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { profile } = useAuth();
 
+  const commentsCount = comments.length;
+
   const fetchComments = async () => {
     setIsLoading(true);
     
@@ -174,10 +176,11 @@ export function useComments(checkInId: string) {
 
   return {
     comments,
+    commentsCount,
     isLoading,
     isSubmitting,
     addComment,
     deleteComment,
-    fetchComments
+    fetchComments,
   };
 }
