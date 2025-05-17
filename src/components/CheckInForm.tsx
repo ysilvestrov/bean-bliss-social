@@ -132,9 +132,15 @@ const CheckInForm = () => {
     e.preventDefault();
     
     if (!coffeeName || !roastery || !brewMethod || rating === 0) {
+      const missingFields = [];
+      if (!coffeeName) missingFields.push('Coffee Name');
+      if (!roastery) missingFields.push('Roastery');
+      if (!brewMethod) missingFields.push('Brew Method');
+      if (rating === 0) missingFields.push('Rating');
+      
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields.",
+        description: `Please fill in the following required fields: ${missingFields.join(', ')}.`,
         variant: "destructive",
       });
       return;
@@ -219,7 +225,7 @@ const CheckInForm = () => {
               id="coffee-name" 
               type="text" 
               placeholder="e.g., Ethiopian Yirgacheffe" 
-              className="bg-white"
+              className={`bg-white ${coffeeName ? '' : 'border-red-500'}`}
               value={coffeeName}
               onChange={(e) => setCoffeeName(e.target.value)}
               required
@@ -233,7 +239,7 @@ const CheckInForm = () => {
               id="roastery" 
               type="text" 
               placeholder="e.g., Blue Bottle Coffee" 
-              className="bg-white"
+              className={`bg-white ${roastery ? '' : 'border-red-500'}`}
               value={roastery}
               onChange={(e) => setRoastery(e.target.value)}
               required
@@ -246,9 +252,14 @@ const CheckInForm = () => {
             <label htmlFor="brew-method" className="text-sm font-medium">
               Brew Method
             </label>
-            <Select value={brewMethod} onValueChange={setBrewMethod} required>
-              <SelectTrigger>
+            <Select 
+              value={brewMethod} 
+              onValueChange={setBrewMethod} 
+              required
+            >
+              <SelectTrigger className={`${brewMethod ? '' : 'border-red-500'}`}>
                 <SelectValue placeholder="Select brew method" />
+
               </SelectTrigger>
               <SelectContent>
                 {brewMethods.map((method) => (
