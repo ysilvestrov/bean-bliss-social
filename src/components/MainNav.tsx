@@ -102,7 +102,7 @@ const MainNav = () => {
         {isAuthenticated ? (
           <Button 
             variant="outline" 
-            className="border-coffee-dark text-coffee-dark hover:bg-coffee-light/20"
+            className="border-coffee-dark text-coffee-dark hover:bg-coffee-light/20 hover:text-coffee-dark"
             onClick={handleSignOut}
           >
             <LogOut className="h-4 w-4 mr-2" />

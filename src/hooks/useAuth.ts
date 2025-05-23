@@ -61,6 +61,7 @@ export const useAuth = () => {
             }
           }
 
+
           console.log("Profile data retrieved:", profileData);
           setProfile(profileData);
         } catch (error) {

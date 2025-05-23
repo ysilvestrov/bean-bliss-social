@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Coffee, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FollowStatus, FriendAction } from "@/types/user";
 
 interface FriendCardProps {
   id: string;
@@ -11,11 +12,11 @@ interface FriendCardProps {
   username: string;
   avatar?: string;
   initials: string;
-  status?: "friend" | "follower" | "following" | "none" | "self";
+  status?: FollowStatus;
   checkIns?: number;
   variant?: "compact" | "full";
   className?: string;
-  onAction?: (id: string, action: 'add' | 'accept' | 'remove') => void;
+  onAction?: (id: string, action: FriendAction) => void;
 }
 
 const FriendCard = ({
@@ -67,11 +68,11 @@ const FriendCard = ({
           {status === "none" && (
             <Button 
               variant="outline" 
-              className="w-full hover:bg-coffee-light/10 border-coffee-light"
-              onClick={() => onAction?.(id, 'add')}
+              className="w-full hover:bg-coffee-light/20 border-coffee-light hover:text-coffee-dark"
+              onClick={() => onAction?.(id, 'follow')}
             >
               <User className="h-4 w-4 mr-2" />
-              Add Friend
+              Follow
             </Button>
           )}
           
@@ -80,16 +81,9 @@ const FriendCard = ({
               <Button 
                 variant="default" 
                 className="flex-1 bg-coffee-dark hover:bg-coffee-dark/90"
-                onClick={() => onAction?.(id, 'add')}
+                onClick={() => onAction?.(id, 'follow')}
               >
                 Follow Back
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => onAction?.(id, 'remove')}
-              >
-                Decline
               </Button>
             </div>
           )}

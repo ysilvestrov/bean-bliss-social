@@ -1,14 +1,14 @@
-
 import React from "react";
 import FriendCard from "@/components/FriendCard";
-import { Friend } from "@/hooks/useFriends";
+import { FriendAction, UserProfile } from "@/types/user";
 
 interface FriendsListProps {
-  friends: Friend[];
-  onAction?: (id: string, action: 'add' | 'accept' | 'remove') => void;
+  friends: UserProfile[];
+  variant?: "compact" | "full";
+  onAction?: (id: string, action: FriendAction) => void;
 }
 
-const FriendsList: React.FC<FriendsListProps> = ({ friends, onAction }) => {
+const FriendsList: React.FC<FriendsListProps> = ({ friends, variant = "compact", onAction }) => {
   return (
     <>
       <h2 className="text-xl font-bold mb-4">Friends</h2>
@@ -18,7 +18,7 @@ const FriendsList: React.FC<FriendsListProps> = ({ friends, onAction }) => {
           {friends.map((friend) => (
             <FriendCard
               key={friend.id}
-              variant="compact"
+              variant={variant}
               {...friend}
               onAction={onAction}
             />

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Coffee } from "lucide-react";
@@ -7,26 +7,58 @@ import MainNav from "@/components/MainNav";
 import { toast } from "@/components/ui/sonner";
 import { useAuthProfile } from "@/hooks/useAuthProfile";
 import { useUserCheckIns } from "@/hooks/useUserCheckIns";
-import { useFriends } from "@/hooks/useFriends";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingState from "@/components/profile/LoadingState";
 import AuthProfileHeader from "@/components/profile/AuthProfileHeader";
-import CheckInsList from "@/components/profile/CheckInsList";
 import FriendsList from "@/components/profile/FriendsList";
 import CoffeeCard from "@/components/CoffeeCard";
+import { useFollowData } from "@/hooks/useFollowData";
+import { UserProfile } from "@/types/user";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("check-ins");
   
   const {
     profile,
-    loading,
+    loading: authLoading,
     stats,
     handleSignOut
   } = useAuthProfile();
-  
-  const { checkIns, checkInsCount, setCheckIns } = useUserCheckIns(profile?.id);
-  const { friends, handleFriendAction } = useFriends();
+
+    const { 
+      followers, 
+      following, 
+      loading: followLoading, 
+      loadFollowData,
+      handleFollowAction,
+      setNeedsReload 
+    } = useFollowData(profile?.id);
+    
+    const [mutualFriends, setMutualFriends] = useState<UserProfile[]>([]);  
+    
+    const { checkIns, checkInsCount, setCheckIns } = useUserCheckIns(profile?.id);
+
+  useEffect(() => {
+    const initialize = async () => {
+      if (profile?.id) {
+        await loadFollowData(profile?.id);
+        if (followers && following) {
+          const mutual = followers
+            .filter(follower => 
+              following.some(follow => follow.id === follower.id)
+            )
+            .map(follower => ({
+              ...follower,
+              status: 'friend' as const
+            }));
+          setMutualFriends(mutual);
+
+        }
+      }
+    };
+
+    initialize();
+  }, [profile]);
 
   const handleDeleteCheckIn = async (checkInId: string) => {
     try {
@@ -52,8 +84,14 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
-    return <LoadingState />;
+  if (authLoading || followLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <span className="container mx-auto px-4 py-6">authLoading {authLoading  ? 'true' : 'false'} 
+          | followLoading {followLoading ?  'true' : 'false'}</span>
+        <LoadingState />
+      </div>
+    );
   }
 
   if (!profile) {
@@ -88,8 +126,14 @@ const Profile = () => {
               <Coffee className="w-4 h-4 mr-2" />
               Check-ins
             </TabsTrigger>
-            <TabsTrigger value="friends">
-              Friends
+            <TabsTrigger value="mutual">
+              Mutual
+            </TabsTrigger>
+            <TabsTrigger value="followers">
+              Followers
+            </TabsTrigger>
+            <TabsTrigger value="following">
+              Following
             </TabsTrigger>
           </TabsList>
           
@@ -117,12 +161,29 @@ const Profile = () => {
             )}
           </TabsContent>
           
-          <TabsContent value="friends">
+          <TabsContent value="mutual">
             <FriendsList 
-              friends={friends}
-              onAction={handleFriendAction}
+              friends={mutualFriends}
+              variant="full"
+              onAction={handleFollowAction}
             />
           </TabsContent>
+          
+          <TabsContent value="followers">
+            <FriendsList 
+              friends={followers}
+              variant="full"
+              onAction={handleFollowAction}
+            />
+          </TabsContent> 
+          
+          <TabsContent value="following">
+            <FriendsList 
+              friends={following}
+              variant="full"
+              onAction={handleFollowAction}
+            />
+          </TabsContent>  
         </Tabs>
       </div>
     </div>

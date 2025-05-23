@@ -4,155 +4,64 @@ import MainNav from "@/components/MainNav";
 import FriendCard from "@/components/FriendCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { FriendAction, FollowStatus as FriendStatus } from "@/types/user";
 
-// Let's define the correct type for status
-type FriendStatus = "friend" | "follower" | "following" | "none" | "self";
-
-// Define the mock data with correct status types
-const mockFriends = [
-  {
-    id: "1",
-    name: "Alex Johnson",
-    username: "alexj",
-    initials: "AJ",
-    status: "friend" as FriendStatus,
-    checkIns: 124,
-    avatar: "https://i.pravatar.cc/150?u=alexj"
-  },
-  {
-    id: "2",
-    name: "Sam Taylor",
-    username: "samt",
-    initials: "ST",
-    status: "friend" as FriendStatus,
-    checkIns: 78
-  },
-  {
-    id: "3",
-    name: "Jordan Lee",
-    username: "jlee",
-    initials: "JL",
-    status: "friend" as FriendStatus,
-    checkIns: 203,
-    avatar: "https://i.pravatar.cc/150?u=jlee"
-  },
-  {
-    id: "4",
-    name: "Casey Morgan",
-    username: "cmorg",
-    initials: "CM",
-    status: "friend" as FriendStatus,
-    checkIns: 56
-  },
-  {
-    id: "5",
-    name: "Riley Quinn",
-    username: "rileyq",
-    initials: "RQ",
-    status: "friend" as FriendStatus,
-    checkIns: 189,
-    avatar: "https://i.pravatar.cc/150?u=rileyq"
-  }
-];
-
-const mockPending = [
-  {
-    id: "6",
-    name: "Jamie Smith",
-    username: "jamies",
-    initials: "JS",
-    status: "pending" as FriendStatus,
-    checkIns: 45
-  },
-  {
-    id: "7",
-    name: "Blake Wilson",
-    username: "bwilson",
-    initials: "BW",
-    status: "pending" as FriendStatus,
-    checkIns: 112,
-    avatar: "https://i.pravatar.cc/150?u=bwilson"
-  }
-];
-
-const mockSuggestions = [
-  {
-    id: "8",
-    name: "Taylor Reed",
-    username: "treed",
-    initials: "TR",
-    status: "none" as FriendStatus,
-    checkIns: 64
-  },
-  {
-    id: "9",
-    name: "Cameron White",
-    username: "cwhite",
-    initials: "CW",
-    status: "none" as FriendStatus,
-    checkIns: 93,
-    avatar: "https://i.pravatar.cc/150?u=cwhite"
-  },
-  {
-    id: "10",
-    name: "Jordan Ellis",
-    username: "jellis",
-    initials: "JE",
-    status: "none" as FriendStatus,
-    checkIns: 127
-  }
-];
+interface Friend {
+  id: string;
+  name: string;
+  username: string;
+  avatar?: string;
+  initials: string;
+  status: FriendStatus;
+}
 
 const Friends = () => {
-  const [friends, setFriends] = useState(mockFriends);
-  const [pendingFriends, setPendingFriends] = useState(mockPending);
-  const [suggestions, setSuggestions] = useState(mockSuggestions);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [pendingFriends, setPendingFriends] = useState<Friend[]>([]);
+  const [suggestions, setSuggestions] = useState<Friend[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  const handleFriendAction = (id: string, action: string) => {
-    if (action === "accept") {
-      // Move from pending to friends
-      const friendToAccept = pendingFriends.find((friend) => friend.id === id);
-      if (friendToAccept) {
-        setFriends([...friends, { ...friendToAccept, status: "friend" }]);
-        setPendingFriends(pendingFriends.filter((friend) => friend.id !== id));
-        toast({
-          title: "Friend Request Accepted!",
-          description: `You are now friends with ${friendToAccept.name}.`,
-        });
-      }
-    } else if (action === "reject") {
-      // Remove from pending
-      const friendToRemove = pendingFriends.find((friend) => friend.id === id);
-      if (friendToRemove) {
-        setPendingFriends(pendingFriends.filter((friend) => friend.id !== id));
-        toast({
-          title: "Friend Request Rejected",
-          description: `You have rejected the friend request from ${friendToRemove.name}.`,
-        });
-      }
-    } else if (action === "add") {
-      // Move from suggestions to pending
-      const friendToAdd = suggestions.find((friend) => friend.id === id);
-      if (friendToAdd) {
-        setPendingFriends([...pendingFriends, { ...friendToAdd, status: "none" }]);
-        setSuggestions(suggestions.filter((friend) => friend.id !== id));
-        toast({
-          title: "Friend Request Sent!",
-          description: `You have sent a friend request to ${friendToAdd.name}.`,
-        });
-      }
-    } else if (action === "remove") {
-      // Remove from friends
-      const friendToRemove = friends.find((friend) => friend.id === id);
-      if (friendToRemove) {
-        setFriends(friends.filter((friend) => friend.id !== id));
-        toast({
-          title: "Friend Removed",
-          description: `You have removed ${friendToRemove.name} from your friends.`,
-        });
-      }
+  const handleFriendAction = (id: string, action: FriendAction) => {
+    switch (action) {
+      case "accept":
+        // Move from pending to friends
+        const friendToAccept = pendingFriends.find((friend) => friend.id === id);
+        if (friendToAccept) {
+          setFriends([...friends, { ...friendToAccept, status: "friend" }]);
+          setPendingFriends(pendingFriends.filter((friend) => friend.id !== id));
+          toast({
+            title: "Friend Request Accepted!",
+            description: `You are now friends with ${friendToAccept.name}.`,
+          });
+        }
+        break;
+      case "remove":
+        // Remove from friends
+        const friendToRemove = friends.find((friend) => friend.id === id);
+        if (friendToRemove) {
+          setFriends(friends.filter((friend) => friend.id !== id));
+          toast({
+            title: "Friend Removed",
+            description: `You have removed ${friendToRemove.name} from your friends.`,
+          });
+        }
+        break;
+      case "follow":
+        // Move from suggestions to pending
+        const friendToAdd = suggestions.find((friend) => friend.id === id);
+        if (friendToAdd) {
+          setPendingFriends([...pendingFriends, { ...friendToAdd, status: "following" }]);
+          setSuggestions(suggestions.filter((friend) => friend.id !== id));
+          toast({
+            title: "Following User",
+            description: `You are now following ${friendToAdd.name}.`,
+          });
+        }
+        break;
+      default:
+        console.error(`Unsupported action: ${action}`);
+        break;
     }
   };
 

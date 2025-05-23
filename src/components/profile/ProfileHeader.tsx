@@ -28,7 +28,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const getFollowButtonText = () => {
     switch(followStatus) {
       case 'mutual':
-        return 'Unfollow (Mutual)';
+        return 'Unfollow';
       case 'following':
         return 'Unfollow';
       case 'follower':
@@ -106,7 +106,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           onClick={onFollowAction}
           disabled={isActionLoading}
           variant={followStatus === 'following' || followStatus === 'mutual' ? "outline" : "default"}
-          className={followStatus === 'following' || followStatus === 'mutual' ? "border-coffee-dark text-coffee-dark hover:bg-coffee-light/20" : "bg-coffee-dark hover:bg-coffee-dark/90"}
+          className={followStatus === 'following' || followStatus === 'mutual' ? "border-coffee-dark text-coffee-dark hover:bg-coffee-light/20 hover:text-coffee-dark" : "bg-coffee-dark hover:bg-coffee-dark/90"}
         >
           {isActionLoading ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
